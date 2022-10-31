@@ -1,19 +1,29 @@
 # Crusher
 *Tagged binary compression for C++*
 
-C++ is a well defined ISO standard, so we can think of C++ as a data specification. The aim of Crusher is to lightly extend the C++ data layout specification to enable extremely fast tagged binary messaging.
+C++ is a well defined ISO standard, so we use C++ as a data specification. Crusher aims to lightly extend the C++ data layout specification to enable extremely fast tagged binary messaging.
 
-**We want ultimate speed with ultimate flexibility!**
+**The aim is for high speed with excellent flexibility.**
 
 ## Why tagged messages?
 
-For flexibility and efficiency. JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. A fixed binary message without tags means that we must always send the entire message. Also, when we want to add more fields, tagged messaged with unordered mapping make this really easy.
+Flexibility and efficiency. JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. A fixed binary message without tags means that the entire message must always be sent. Also, extending specifications and adding more fields if much easier with tagged messages and unordered mapping.
 
-## What about endianness and platform differences?
+## Endianness
 
-Crusher is intended to be used in contexts where we know how C++ will encode on the given hardware. We intend to support endianness conversions, but in most cases we would prefer to use the endianness of the hardware in our given context in order to achieve maximum performance.
+The default endianness is expected to be `little endian`. Implementors may support endian conversions or clearly communicate the use of big endian for specific use cases.
 
-Much like software interfaces that require a level of binary compatibility, so does Crusher. But, it does so with simplicity in mind and is typically a non-issue.
+## File Extension
+
+The standard extension for crusher files is `.crush`
+
+If big endian is used in a file then the extension standard is `.bcrush`
+
+## Implementations
+
+### C++
+
+- [Glaze](https://github.com/stephenberry/glaze)
 
 # The Specification
 
