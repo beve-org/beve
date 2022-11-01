@@ -1,7 +1,7 @@
 # Crusher
-*Tagged binary compression for C++*
+*High performance, tagged binary data specification*
 
-The aim is extremely high performance with excellent flexibility.
+The aim is extremely high transfer performance with excellent flexibility.
 
 Crusher lightly extends the C++ data layout specification to enable extremely fast tagged binary messaging.
 
@@ -67,6 +67,12 @@ struct header8 final {
 | N < 1073741824 `[2^30]`          | 4                    |
 | N < 4611686018427387904 `[2^62]` | 8                    |
 
+## Strings
+
+Strings are arrays of bytes prefixed by a size header. The transform must be `std::memcpy` compliant.
+
+Layout: `size_header | data_bytes`
+
 ## Objects
 
 Objects are tagged with integer keys in the sequence in which the member fields occur from top to bottom.
@@ -83,6 +89,14 @@ struct point {
 
 Layout: `size_header | key0 | value0 | ... keyN | valueN`
 
+## Dynamic Objects (Maps)
+
+Dynamic objects use string or integer keys. The key type is not denoted in the message and must be part of the message specification.
+
+Layout: `size_header | key0 | value0 | ... keyN | valueN`
+
+If keys are strings, then the keys will be prefixed with a size header, following the string description.
+
 ## Dynamic Arrays
 
 Layout: `size_header | data_bytes`
@@ -94,3 +108,7 @@ Layout: `data_bytes`
 > Fixed sized arrays (compile time known) must not include the size of the array. This is to improve the efficiency of array messages in contexts where the size is known. *This means that statically sized arrays and dynamically sized arrays cannot be intermixed across implementations.*
 
 A message or API specification using Crusher must denote whether an array is dynamic or fixed size.
+
+## Enums
+
+Enumerations are passed in their integer form.
