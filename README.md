@@ -1,21 +1,25 @@
 # Crusher
 *Tagged binary compression for C++*
 
-C++ is a well defined ISO standard, so we use C++ as a data specification. Crusher aims to lightly extend the C++ data layout specification to enable extremely fast tagged binary messaging.
+The aim is extremely high performance with excellent flexibility.
 
-**The aim is for high speed with excellent flexibility.**
+Crusher lightly extends the C++ data layout specification to enable extremely fast tagged binary messaging.
 
-## Why tagged messages?
+> Crusher works very much like JSON, allowing partial objects via tags and dynamically sized arrays.
 
-Flexibility and efficiency. JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. A fixed binary message without tags means that the entire message must always be sent. Also, extending specifications and adding more fields if much easier with tagged messages and unordered mapping.
+## Why Tagged Messages?
+
+*Flexibility and efficiency*
+
+JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. A fixed binary message without tags means that the entire message must always be sent. Furthermore, extending specifications and adding more fields if far easier with tagged messages and unordered mapping.
 
 ## Endianness
 
-The default endianness is expected to be `little endian`. Implementors may support endian conversions or clearly communicate the use of big endian for specific use cases.
+The default endianness is expected to be `little endian`. Implementors may support endian conversions or clearly communicate the use of big endian for specialized applications.
 
 ## File Extension
 
-The standard extension for crusher files is `.crush`
+The standard extension for crusher files should be `.crush`
 
 If big endian is used in a file then the extension standard is `.bcrush`
 
@@ -25,16 +29,68 @@ If big endian is used in a file then the extension standard is `.bcrush`
 
 - [Glaze](https://github.com/stephenberry/glaze)
 
-# The Specification
+## Values
 
-See [Concepts](# Concepts) for definitions of types.
+Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types/is_arithmetic) are considered values and are stored in the same manner as a `std::memcpy` call on the value.
 
-| Concept    | Transform   |      |
-| ---------- | ----------- | ---- |
-| Arithmetic | std::memcpy |      |
-|            |             |      |
-|            |             |      |
+See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 
-## Concepts
+```c++
+int32_t x{};
+std::memcpy(dest, &x, sizeof(int32_t));
+```
 
-- Arithmetic: `std::is_arithmetic_v`
+## Size Header
+
+Sizes, such as the length of a dynamic array, are compressed using the first two bits to denote the number of bytes expressing the size.
+
+```c++
+// single byte header
+struct header8 final {
+  uint8_t config : 2;
+  uint8_t size : 6;
+};
+//... 2, 4, and 8 byte headers follow the same layout
+```
+
+| `config` # | Number of bytes |
+| ---------- | --------------- |
+| 0          | 1               |
+| 1          | 2               |
+| 2          | 4               |
+| 3          | 8               |
+
+| Size or length (N)               | Number of bytes used |
+| -------------------------------- | -------------------- |
+| N < 64 `[2^6]`                   | 1                    |
+| N < 16384 `[2^14]`               | 2                    |
+| N < 1073741824 `[2^30]`          | 4                    |
+| N < 4611686018427387904 `[2^62]` | 8                    |
+
+## Objects
+
+Objects are tagged with integer keys in the sequence in which the member fields occur from top to bottom.
+
+> It is up to the implementor to ensure that when the layout is exposed it conforms to the layout of the struct.
+
+```c++
+struct point {
+	float x{}; // key is 0
+	float y{}; // key is 1
+	float z{}; // key is 2
+};
+```
+
+Layout: `size_header | key0 | value0 | ... keyN | valueN`
+
+## Dynamic Arrays
+
+Layout: `size_header | data_bytes`
+
+## Fixed Size Arrays
+
+Layout: `data_bytes`
+
+> Fixed sized arrays (compile time known) must not include the size of the array. This is to improve the efficiency of array messages in contexts where the size is known. *This means that statically sized arrays and dynamically sized arrays cannot be intermixed across implementations.*
+
+A message or API specification using Crusher must denote whether an array is dynamic or fixed size.
