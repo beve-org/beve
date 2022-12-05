@@ -75,7 +75,7 @@ Layout: `size_header | data_bytes`
 
 ## Objects
 
-Specification (e.g. compile time) known keys are sent as 32bit hashes conforming to the [Murmur3](https://en.wikipedia.org/wiki/MurmurHash) algorithm. The seed must always be zero (0) and collisions are invalid. It is up to the user to ensure that no two keys will generate the same hash.
+Specification (e.g. compile time) known keys are sent as 32bit hashes conforming to the [Murmur3](https://en.wikipedia.org/wiki/MurmurHash) algorithm. The seed must always be thirty-one (31) and collisions are invalid. It is up to the user to ensure that no two keys will generate the same hash.
 
 Layout: `size_header | key0_hash | value0 | ... keyN_hash | valueN`
 
