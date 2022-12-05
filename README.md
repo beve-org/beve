@@ -75,19 +75,9 @@ Layout: `size_header | data_bytes`
 
 ## Objects
 
-Objects are tagged with integer keys in the sequence in which the member fields occur from top to bottom.
+Specification (e.g. compile time) known keys are sent as 32bit hashes conforming to the [Murmur3](https://en.wikipedia.org/wiki/MurmurHash) algorithm. The seed must always be zero (0) and collisions are invalid. It is up to the user to ensure that no two keys will generate the same hash.
 
-> It is up to the implementor to ensure that when the layout is exposed it conforms to the layout of the struct.
-
-```c++
-struct point {
-	float x{}; // key is 0
-	float y{}; // key is 1
-	float z{}; // key is 2
-};
-```
-
-Layout: `size_header | key0 | value0 | ... keyN | valueN`
+Layout: `size_header | key0_hash | value0 | ... keyN_hash | valueN`
 
 ## Dynamic Objects (Maps)
 
@@ -95,7 +85,7 @@ Dynamic objects use string or integer keys. The key type is not denoted in the m
 
 Layout: `size_header | key0 | value0 | ... keyN | valueN`
 
-If keys are strings, then the keys will be prefixed with a size header, following the string description.
+If keys are strings, then the keys follow the string specification, including a size header.
 
 ## Dynamic Arrays
 
