@@ -102,3 +102,7 @@ A message or API specification using Crusher must denote whether an array is dyn
 ## Enums
 
 Enumerations are passed in their integer form.
+
+## Untagged Objects With Known Keys
+
+Crusher permits messages with known keys to be sent without tags under user defined circumstances. It is not generally recommended, but where message size is critical crusher implementations should allow object of known keys to eliminate the keys from the message. The receiver must be aware of this message change.
