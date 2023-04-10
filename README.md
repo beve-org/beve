@@ -1,10 +1,11 @@
 # Crusher
 *High performance, tagged binary data specification like JSON.*
 
-- Little endian for maximum performance on modern CPUs
 - Maps directly to and from JSON
 - Schema less, fully described, like JSON (can be used to store documents)
-- Efficiently packed
+- Little endian for maximum performance on modern CPUs
+- Efficiently packed, stores bit packed tags and values efficiently
+- Future proof, supports large numerical types (such as 128 bit integers)
 
 Crusher is much like CBOR or BSON, but is more space efficient in some cases, and is much faster on modern hardware.
 
