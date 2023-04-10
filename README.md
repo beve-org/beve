@@ -1,11 +1,12 @@
 # Crusher
-*High performance, tagged binary data specification*
+*High performance, tagged binary data specification like JSON.*
 
-The aim is extremely high transfer performance with excellent flexibility.
+- Little endian for maximum performance on modern CPUs
+- Maps directly to and from JSON
+- Schema less, fully described, like JSON (can be used to store documents)
+- Efficiently packed
 
-Crusher lightly extends the C++ data layout specification to enable extremely fast tagged binary messaging.
-
-> Crusher works very much like JSON, allowing partial objects via tags and dynamically sized arrays.
+Crusher is much like CBOR or BSON, but is more space efficient in some cases, and is much faster on modern hardware.
 
 ## Why Tagged Messages?
 
@@ -15,13 +16,11 @@ JSON is ubiquitous because it is tagged (has keys), and therefore messages can b
 
 ## Endianness
 
-The default endianness is expected to be `little endian`. Implementors may support endian conversions or clearly communicate the use of big endian for specialized applications.
+The endianness must be `little endian`.
 
 ## File Extension
 
 The standard extension for crusher files should be `.crush`
-
-If big endian is used in a file then the extension standard is `.bcrush`
 
 ## Implementations
 
