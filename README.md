@@ -159,7 +159,9 @@ Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
 
 ## Type Tag
 
-Uses a Compressed Integer to indicate a type.
+Expects a subsequent compressed unsigned integer to denote a type tag.
+
+Layout : `HEADER | SIZE (i.e. tag) | value`
 
 ## Enums
 
