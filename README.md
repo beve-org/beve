@@ -55,7 +55,7 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 ## Byte Count Indicator
 
-> Wherever all caps `COUNT` is used, it describes this count indicator.
+> Wherever all caps `BYTE COUNT` is used, it describes this count indicator.
 
 | `config` # | Number of bytes |
 | ---------- | --------------- |
@@ -100,7 +100,7 @@ The next bit of the HEADER indicates whether the number is an integer or floatin
 1 -> floating point
 ```
 
-The final four bits of the HEADER are used as a byte count indicator.
+The final four bits of the HEADER are used as the BYTE COUNT.
 
 | TYPE | integer or floating point |
 
@@ -115,7 +115,7 @@ std::memcpy(destination, &x, sizeof(int32_t));
 
 ## Strings
 
-The final five bits indicate the number of bytes used for each character (using a byte count indicator).
+The final five bits indicate the number of bytes used for each character (BYTE COUNT).
 
 The transform must be `std::memcpy` compliant.
 
@@ -145,7 +145,7 @@ The next two bits indicate the type stored in the array:
 3 -> string
 ```
 
-The next three bits of the type header are the byte count indicator.
+The next three bits of the type header are the BYTE COUNT.
 
 Layout: `HEADER | SIZE | data_bytes`
 
@@ -153,7 +153,7 @@ Layout: `HEADER | SIZE | data_bytes`
 
 ## Untyped Arrays
 
-The next five bits indicate of the HEADER are the byte count indicator.
+The next five bits indicate of the HEADER are the BYTE COUNT.
 
 Untyped arrays expect elements to have type information.
 
