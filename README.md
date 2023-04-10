@@ -57,6 +57,8 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 > Wherever all caps `BYTE COUNT` is used, it describes this count indicator.
 
+Mathematically, this is log2(x)
+
 | `config` # | Number of bytes |
 | ---------- | --------------- |
 | 0          | 1               |
@@ -144,6 +146,8 @@ The next two bits indicate the type stored in the array:
 ```
 
 The next three bits of the type header are the BYTE COUNT.
+
+> For typed arrays of strings, each string uses a SIZE to denote the size, but no HEADER tag is needed in front of each individual string.
 
 Layout: `HEADER | SIZE | data_bytes`
 
