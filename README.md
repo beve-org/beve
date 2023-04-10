@@ -7,7 +7,7 @@
 - Efficiently packed, stores bit packed tags and values efficiently
 - Future proof, supports large numerical types (such as 128 bit integers)
 
-Crusher is much like CBOR or BSON, but is more space efficient in some cases, and is much faster on modern hardware.
+> Crusher is much like CBOR or BSON, but is more space efficient in some cases, and is much faster on modern hardware.
 
 ## Why Tagged Messages?
 
