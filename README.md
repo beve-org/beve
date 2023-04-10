@@ -29,36 +29,33 @@ The standard extension for crusher files should be `.crush`
 
 - [Glaze](https://github.com/stephenberry/glaze)
 
-## Compressed Integer
+## Right Most Bit Ordering
 
-A compressed integer uses the first two bits to denote the number of bytes used to express an integer.
+The right most bit is denoted as the first bit, or bit of index 0.
 
-```c++
-// single byte header
-struct compressed_int final {
-  uint8_t config : 2;
-  uint8_t size : 6;
-};
-//... 2, 4, and 8 byte headers follow the same layout
-```
+## Compressed Unsigned Integer
 
-| `config` # | Number of bytes |
+A compressed unsigned integer uses the first two bits to denote the number of bytes used to express an integer. The rest of the bits indicate the integer value.
+
+> Wherever all caps `SIZE` is used in the specification, it refers to a size indicator that uses a compressed unsigned integer.
+
+| `config` # | Number of Bytes |
 | ---------- | --------------- |
 | 0          | 1               |
 | 1          | 2               |
 | 2          | 4               |
 | 3          | 8               |
 
-| Size or length (N)               | Number of bytes used |
-| -------------------------------- | -------------------- |
-| N < 64 `[2^6]`                   | 1                    |
-| N < 16384 `[2^14]`               | 2                    |
-| N < 1073741824 `[2^30]`          | 4                    |
-| N < 4611686018427387904 `[2^62]` | 8                    |
+| Integer Value (N)                | Number of Bytes |
+| -------------------------------- | --------------- |
+| N < 64 `[2^6]`                   | 1               |
+| N < 16384 `[2^14]`               | 2               |
+| N < 1073741824 `[2^30]`          | 4               |
+| N < 4611686018427387904 `[2^62]` | 8               |
 
 ## Byte Count Indicator
 
-Only requires three bits, but may use more.
+> Wherever all caps `COUNT` is used, it describes this count indicator.
 
 | `config` # | Number of bytes |
 | ---------- | --------------- |
@@ -75,7 +72,9 @@ Only requires three bits, but may use more.
 
 The type of every value is defined within a single byte.
 
-The first three bits describe the high level type via the following numerical values:
+> Wherever all caps `HEADER` is used, it describes this single byte type header.
+
+The first three bits describe the type via the following numerical values:
 
 ```c++
 0 -> boolean
@@ -90,18 +89,20 @@ The first three bits describe the high level type via the following numerical va
 
 ## Booleans
 
-The next bit indicates true or false.
+The next bit of the HEADER indicates true or false.
 
 ## Numbers
 
-The next bit indicates whether the number is an integer or floating point value:
+The next bit of the HEADER indicates whether the number is an integer or floating point value:
 
 ```c++
 0 -> integer
 1 -> floating point
 ```
 
-The final four bits are used as a byte count indicator.
+The final four bits of the HEADER are used as a byte count indicator.
+
+| TYPE | integer or floating point |
 
 Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types/is_arithmetic) are stored in the same manner as a `std::memcpy` call on the value.
 
@@ -109,29 +110,29 @@ See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer)
 
 ```c++
 int32_t x{};
-std::memcpy(dest, &x, sizeof(int32_t));
+std::memcpy(destination, &x, sizeof(int32_t));
 ```
 
 ## Strings
 
 The final five bits indicate the number of bytes used for each character (using a byte count indicator).
 
-Strings are arrays of bytes prefixed by a size header. The transform must be `std::memcpy` compliant.
+The transform must be `std::memcpy` compliant.
 
-Layout: `type_header | size | data_bytes`
+Layout: `HEADER | SIZE | data_bytes`
 
 ## Objects
 
-The next bit indicates the type of key.
+The next bit of the HEADER indicates the type of key.
 
 ```c++
 0 -> integer keys
 1 -> string keys
 ```
 
-The next four bits indicate the number of bytes used for the integer type (integer keys) or the character type (string keys).
+The next four bits of the HEADER indicate the number of bytes used for the integer type (integer keys) or the character type (string keys).
 
-Layout: `type_header | size | key[0] | value[0] | ... key[N] | value[N]`
+Layout: `HEADER | SIZE | key[0] | value[0] | ... key[N] | value[N]`
 
 ## Typed Arrays
 
@@ -146,17 +147,17 @@ The next two bits indicate the type stored in the array:
 
 The next three bits of the type header are the byte count indicator.
 
-Layout: `type_header | size | data_bytes`
+Layout: `HEADER | SIZE | data_bytes`
 
 > Boolean arrays are stored using single bits for booleans.
 
 ## Untyped Arrays
 
-The next five bits indicate are the byte count indicator.
+The next five bits indicate of the HEADER are the byte count indicator.
 
-Untyped arrays simply expect elements to have type information according to this specification.
+Untyped arrays expect elements to have type information.
 
-Layout: `type_header | size | value[0] | ... value[N]`
+Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
 
 ## Type Tag
 
@@ -165,7 +166,3 @@ Uses a Compressed Integer to indicate a type.
 ## Enums
 
 Enumerations are passed in their integer form.
-
-## Untagged Objects With Known Keys
-
-Crusher permits messages with known keys to be sent without tags under user defined circumstances. It is not generally recommended, but where message size is critical crusher implementations should allow object of known keys to eliminate the keys from the message. The receiver must be aware of this message change.
