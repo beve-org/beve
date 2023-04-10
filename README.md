@@ -29,24 +29,13 @@ If big endian is used in a file then the extension standard is `.bcrush`
 
 - [Glaze](https://github.com/stephenberry/glaze)
 
-## Values
+## Compressed Integer
 
-Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types/is_arithmetic) are considered values and are stored in the same manner as a `std::memcpy` call on the value.
-
-See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
-
-```c++
-int32_t x{};
-std::memcpy(dest, &x, sizeof(int32_t));
-```
-
-## Size Header
-
-Sizes, such as the length of a dynamic array, are compressed using the first two bits to denote the number of bytes expressing the size.
+A compressed integer uses the first two bits to denote the number of bytes used to express an integer.
 
 ```c++
 // single byte header
-struct header8 final {
+struct compressed_int final {
   uint8_t config : 2;
   uint8_t size : 6;
 };
@@ -67,37 +56,111 @@ struct header8 final {
 | N < 1073741824 `[2^30]`          | 4                    |
 | N < 4611686018427387904 `[2^62]` | 8                    |
 
+## Byte Count Indicator
+
+Only requires three bits, but may use more.
+
+| `config` # | Number of bytes |
+| ---------- | --------------- |
+| 0          | 1               |
+| 1          | 2               |
+| 2          | 4               |
+| 3          | 8               |
+| 4          | 16              |
+| 5          | 32              |
+| 6          | 64              |
+| 7          | 128             |
+
+## Type Header
+
+The type of every value is defined within a single byte.
+
+The first three bits describe the high level type via the following numerical values:
+
+```c++
+0 -> boolean
+1 -> null
+2 -> number
+3 -> string
+4 -> object
+5 -> typed array
+6 -> untyped array
+7 -> type tag
+```
+
+## Booleans
+
+The next bit indicates true or false.
+
+## Numbers
+
+The next bit indicates whether the number is an integer or floating point value:
+
+```c++
+0 -> integer
+1 -> floating point
+```
+
+The final four bits are used as a byte count indicator.
+
+Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types/is_arithmetic) are stored in the same manner as a `std::memcpy` call on the value.
+
+See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
+
+```c++
+int32_t x{};
+std::memcpy(dest, &x, sizeof(int32_t));
+```
+
 ## Strings
+
+The final five bits indicate the number of bytes used for each character (using a byte count indicator).
 
 Strings are arrays of bytes prefixed by a size header. The transform must be `std::memcpy` compliant.
 
-Layout: `size_header | data_bytes`
+Layout: `type_header | size | data_bytes`
 
 ## Objects
 
-Specification (e.g. compile time) known keys are sent as 32bit hashes conforming to the [Murmur3](https://en.wikipedia.org/wiki/MurmurHash) algorithm. The seed must always be thirty-one (31) and collisions are invalid. It is up to the user to ensure that no two keys will generate the same hash.
+The next bit indicates the type of key.
 
-Layout: `size_header | key0_hash | value0 | ... keyN_hash | valueN`
+```c++
+0 -> integer keys
+1 -> string keys
+```
 
-## Dynamic Objects (Maps)
+The next four bits indicate the number of bytes used for the integer type (integer keys) or the character type (string keys).
 
-Dynamic objects use string or integer keys. The key type is not denoted in the message and must be part of the message specification.
+Layout: `type_header | size | key[0] | value[0] | ... key[N] | value[N]`
 
-Layout: `size_header | key0 | value0 | ... keyN | valueN`
+## Typed Arrays
 
-If keys are strings, then the keys follow the string specification, including a size header.
+The next two bits indicate the type stored in the array:
 
-## Dynamic Arrays
+```c++
+0 -> boolean
+1 -> integer
+2 -> floating point
+3 -> string
+```
 
-Layout: `size_header | data_bytes`
+The next three bits of the type header are the byte count indicator.
 
-## Fixed Size Arrays
+Layout: `type_header | size | data_bytes`
 
-Layout: `data_bytes`
+> Boolean arrays are stored using single bits for booleans.
 
-> Fixed sized arrays (compile time known) must not include the size of the array. This is to improve the efficiency of array messages in contexts where the size is known. *This means that statically sized arrays and dynamically sized arrays cannot be intermixed across implementations.*
+## Untyped Arrays
 
-A message or API specification using Crusher must denote whether an array is dynamic or fixed size.
+The next five bits indicate are the byte count indicator.
+
+Untyped arrays simply expect elements to have type information according to this specification.
+
+Layout: `type_header | size | value[0] | ... value[N]`
+
+## Type Tag
+
+Uses a Compressed Integer to indicate a type.
 
 ## Enums
 
