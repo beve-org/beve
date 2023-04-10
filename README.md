@@ -147,9 +147,11 @@ The next two bits indicate the type stored in the array:
 
 The next three bits of the type header are the BYTE COUNT.
 
-> For typed arrays of strings, each string uses a SIZE to denote the size, but no HEADER tag is needed in front of each individual string.
-
 Layout: `HEADER | SIZE | data_bytes`
+
+> For typed arrays of strings, each string uses a SIZE to denote the size, but no HEADER tag is needed in front of each individual string.
+>
+> Layout: `HEADER | SIZE | SIZE[0] | string[0] | ... SIZE[N] | string[N]`
 
 > Boolean arrays are stored using single bits for booleans.
 
