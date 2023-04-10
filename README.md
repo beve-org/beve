@@ -102,8 +102,6 @@ The next bit of the HEADER indicates whether the number is an integer or floatin
 
 The final four bits of the HEADER are used as the BYTE COUNT.
 
-| TYPE | integer or floating point |
-
 Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types/is_arithmetic) are stored in the same manner as a `std::memcpy` call on the value.
 
 See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
