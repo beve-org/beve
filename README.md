@@ -72,7 +72,7 @@ Mathematically, this is log2(x)
 
 ## Type Header
 
-The type of every value is defined within a single byte.
+The type of every value is defined within a single byte. Any unspecified bits must be set to zero.
 
 > Wherever all caps `HEADER` is used, it describes this single byte type header.
 
