@@ -103,7 +103,7 @@ The next two bits of the HEADER indicates whether the number is floating point, 
 2 -> unsigned integer 
 ```
 
-The final three bits of the HEADER are used as the BYTE COUNT.
+The next three bits of the HEADER are used as the BYTE COUNT.
 
 Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types/is_arithmetic) are stored in the same manner as a `std::memcpy` call on the value.
 
@@ -116,7 +116,7 @@ std::memcpy(destination, &x, sizeof(int32_t));
 
 ## Strings
 
-The final five bits indicate the number of bytes used for each character (BYTE COUNT).
+The next two bits indicate the number of bytes used for each character (BYTE COUNT).
 
 The transform must be `std::memcpy` compliant.
 
@@ -131,7 +131,7 @@ The next bit of the HEADER indicates the type of key.
 1 -> string keys
 ```
 
-The next four bits of the HEADER indicate the number of bytes used for the integer type (integer keys) or the character type (string keys).
+The next three bits of the HEADER indicate the number of bytes used for the integer type (integer keys) or the character type (string keys) (BYTE COUNT).
 
 Layout: `HEADER | SIZE | key[0] | value[0] | ... key[N] | value[N]`
 
@@ -140,25 +140,26 @@ Layout: `HEADER | SIZE | key[0] | value[0] | ... key[N] | value[N]`
 The next two bits indicate the type stored in the array:
 
 ```c++
-0 -> boolean
-1 -> integer
-2 -> floating point
-3 -> string
+0 -> floating point
+1 -> signed integer
+2 -> unsigned integer
+3 -> boolean or string
 ```
 
-The next three bits of the type header are the BYTE COUNT.
+For integral and floating point types, the next three bits of the type header are the BYTE COUNT.
+
+```c++
+0 -> boolean
+1 -> string
+```
+
+For boolean or string types the next bit indicates whether the type is a boolean or a string. The last two bits are used as the BYTE COUNT for the character size of the string. Boolean arrays are stored using single bits for booleans and packed to the nearest byte.
 
 Layout: `HEADER | SIZE | data_bytes`
 
-> For typed arrays of strings, each string uses a SIZE to denote the size, but no HEADER tag is needed in front of each individual string.
->
-> Layout: `HEADER | SIZE | SIZE[0] | string[0] | ... SIZE[N] | string[N]`
-
-> Boolean arrays are stored using single bits for booleans.
-
 ## Untyped Arrays
 
-The next five bits indicate of the HEADER are the BYTE COUNT.
+The next three bits of the HEADER are the BYTE COUNT.
 
 Untyped arrays expect elements to have type information.
 
