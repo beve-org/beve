@@ -124,11 +124,12 @@ Layout: `HEADER | SIZE | data_bytes`
 
 ## Objects
 
-The next bit of the HEADER indicates the type of key.
+The next two bits of the HEADER indicates the type of key.
 
 ```c++
-0 -> integer keys
-1 -> string keys
+0 -> string
+1 -> signed integer
+2 -> unsigned integer
 ```
 
 The next three bits of the HEADER indicate the number of bytes used for the integer type (integer keys) or the character type (string keys) (BYTE COUNT).
