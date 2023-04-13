@@ -95,14 +95,15 @@ The next bit of the HEADER indicates true or false.
 
 ## Numbers
 
-The next bit of the HEADER indicates whether the number is an integer or floating point value:
+The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.
 
 ```c++
-0 -> integer
-1 -> floating point
+0 -> floating point
+1 -> signed integer
+2 -> unsigned integer 
 ```
 
-The final four bits of the HEADER are used as the BYTE COUNT.
+The final three bits of the HEADER are used as the BYTE COUNT.
 
 Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types/is_arithmetic) are stored in the same manner as a `std::memcpy` call on the value.
 
