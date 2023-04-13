@@ -79,8 +79,8 @@ The type of every value is defined within a single byte. Any unspecified bits mu
 The first three bits describe the type via the following numerical values:
 
 ```c++
-0 -> boolean
-1 -> null
+0 -> null
+1 -> boolean
 2 -> number
 3 -> string
 4 -> object
