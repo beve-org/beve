@@ -163,6 +163,8 @@ The next two bits of the HEADER indicates the type of key.
 
 The next three bits of the HEADER indicate the BYTE COUNT used for the integer type (integer keys) or the character type (string keys).
 
+> Object keys should not contain a HEADER as the type of the key has already been defined.
+
 Layout: `HEADER | SIZE | key[0] | value[0] | ... key[N] | value[N]`
 
 ## Typed Arrays
