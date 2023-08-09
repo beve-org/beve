@@ -9,6 +9,10 @@
 
 > Crusher is much like CBOR or BSON, but is more space efficient in some cases, and is much faster on modern hardware.
 
+> IMPORTANT ARCHIVAL NOTE:
+>
+> The binary format Crusher is under active testing and development. It is not recommended to use for long term archival yet. As a data transport the format should be fine to use. It will be locked for archival use after thorough testing and carefully tweaking the specification.
+
 ## Why Tagged Messages?
 
 *Flexibility and efficiency*
