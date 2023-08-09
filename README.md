@@ -199,7 +199,7 @@ Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
 
 ## Additional
 
-The next three bits denote various additional structures. These are all JSON compliant, meaning they can also be expressed in JSON.
+The next three bits denote various additional structures.
 
 ```c++
 0 -> type tag // for variant like structures
