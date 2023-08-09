@@ -204,6 +204,7 @@ The next three bits denote various additional structures. These are all JSON com
 ```c++
 0 -> type tag // for variant like structures
 1 -> data delimiter // for specs like Newline Delimited JSON
+2 -> matrices
 ```
 
 ### Type Tag (0)
@@ -217,6 +218,21 @@ Layout : `HEADER | SIZE (i.e. tag) | value`
 Expects additional data after the delimiter. Used to separate chunks of data to match a specifications like NDJSON and allow parallel thread reading.
 
 > IMPORTANT: The rest of the bits in the HEADER for Additional data are not guaranteed to be zero (in order to allow the specification to extend). Implementations must ignore these additional bits when checking this HEADER.
+
+### Matrices
+
+Matrices can be stored as object or array types. However, this tag provides a more compact mechanism to introspect matrices.
+
+The next bit defines the layout policy for the matrix.
+
+```c++
+0 -> layout_right // row-major
+1 -> layout_left // column-major
+```
+
+Layout: `HEADER | EXTENTS | HEADER | data`
+
+EXTENTS are written out as a typed array of unsigned integers. Refer to the specification for typed arrays.
 
 ## Enums
 
