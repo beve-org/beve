@@ -89,14 +89,14 @@ The value begins with a byte header. Any unspecified bits must be set to zero.
 The first three bits describe the type via the following numerical values:
 
 ```c++
-0 -> null
-1 -> boolean
-2 -> number
-3 -> string
-4 -> object
-5 -> typed array
-6 -> untyped array
-7 -> additional
+0 -> null                0b00000'000
+1 -> boolean             0b00000'001
+2 -> number              0b00000'010
+3 -> string              0b00000'011
+4 -> object              0b00000'100
+5 -> typed array         0b00000'101
+6 -> untyped array       0b00000'110
+7 -> additional          0b00000'111
 ```
 
 ## Booleans
@@ -104,8 +104,8 @@ The first three bits describe the type via the following numerical values:
 The next bit of the HEADER indicates true or false.
 
 ```c++
-0b0000'0'001 -> false
-0b0000'1'001 -> true
+0b0000'0'001 == false
+0b0000'1'001 == true
 ```
 
 ## Numbers
@@ -113,9 +113,9 @@ The next bit of the HEADER indicates true or false.
 The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.
 
 ```c++
-0 -> floating point
-1 -> signed integer
-2 -> unsigned integer
+0 -> floating point      0b000'00'000
+1 -> signed integer      0b000'01'000
+2 -> unsigned integer    0b000'10'000
 ```
 
 The next three bits of the HEADER are used as the BYTE COUNT.
@@ -130,14 +130,14 @@ double -> 0b011'00'010 // 64bit
 ```
 
 ```c++
-int8_t -> 0b000'01'010
+int8_t  -> 0b000'01'010
 int16_t -> 0b001'01'010
 int32_t -> 0b010'01'010
 int64_t -> 0b011'01'010
 ```
 
 ```c++
-uint8_t -> 0b000'10'010
+uint8_t  -> 0b000'10'010
 uint16_t -> 0b001'10'010
 uint32_t -> 0b010'10'010
 uint64_t -> 0b011'10'010
@@ -146,8 +146,6 @@ uint64_t -> 0b011'10'010
 ## Strings
 
 The next two bits indicate the BYTE COUNT used for each character.
-
-The transform must be `std::memcpy` compliant.
 
 Layout: `HEADER | SIZE | data_bytes`
 
@@ -167,9 +165,9 @@ The next two bits of the HEADER indicates the type of key.
 
 The next three bits of the HEADER indicate the BYTE COUNT used for the integer type (integer keys) or the character type (string keys).
 
-> Object keys should not contain a HEADER as the type of the key has already been defined.
+> Object keys must not contain a HEADER as the type of the key has already been defined.
 
-Layout: `HEADER | SIZE | key[0] | value[0] | ... key[N] | value[N]`
+Layout: `HEADER | SIZE | key[0] | HEADER[0] | value[0] | ... key[N] | HEADER[N] | value[N]`
 
 ## Typed Arrays
 
