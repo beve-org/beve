@@ -191,7 +191,7 @@ Generic arrays expect elements to have headers.
 
 Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
 
-## Extensions
+# Extensions
 
 The next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specific use cases, such as variants, matrices, and complex numbers.
 
