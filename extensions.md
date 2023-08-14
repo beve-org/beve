@@ -51,6 +51,8 @@ The first three bits denote whether this is a single complex number or a complex
 
 For a single complex number the layout is: `HEADER | COMPLEX HEADER | value`
 
+> A complex value is a pair of numbers.
+
 For a complex array the layout is: `HEADER | COMPLEX HEADER | SIZE | data`
 
 > Three bits are used to align the left bits with the layouts for numbers.
