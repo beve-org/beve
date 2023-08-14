@@ -1,4 +1,4 @@
-# Crusher
+# EVE - Efficient Versatile Encoding
 *High performance, tagged binary data specification like JSON.*
 
 - Maps directly to and from JSON
@@ -7,11 +7,11 @@
 - Efficiently packed, stores bit packed tags and values efficiently
 - Future proof, supports large numerical types (such as 128 bit integers and higher)
 
-> Crusher is much like CBOR or BSON, but is more space efficient in some cases, and is much faster on modern hardware.
+> EVE is much like CBOR or BSON, but is often more space efficient, and is much faster on modern hardware.
 
 > IMPORTANT ARCHIVAL NOTE:
 >
-> The binary format Crusher is under active testing and development. It is not recommended to use for long term archival yet. As a data transport the format should be fine to use. It will be locked for archival use after thorough testing and carefully tweaking the specification.
+> This format is under active testing and development. It is not yet recommended for long term archival use. It will be locked for archival use after thorough testing and carefully tweaking the specification.
 
 ## Why Tagged Messages?
 
@@ -25,7 +25,7 @@ The endianness must be `little endian`.
 
 ## File Extension
 
-The standard extension for crusher files should be `.crush`
+The standard extension for EVE files is `.eve`
 
 ## Implementations
 
@@ -95,9 +95,13 @@ The first three bits describe the type via the following numerical values:
 3 -> string              0b00000'011
 4 -> object              0b00000'100
 5 -> typed array         0b00000'101
-6 -> untyped array       0b00000'110
-7 -> additional          0b00000'111
+6 -> generic array       0b00000'110
+7 -> extensions          0b00000'111
 ```
+
+## Null
+
+Null is simply the value of `0`
 
 ## Booleans
 
@@ -143,16 +147,6 @@ uint32_t -> 0b010'10'010
 uint64_t -> 0b011'10'010
 ```
 
-## Strings
-
-The next two bits indicate the BYTE COUNT used for each character.
-
-Layout: `HEADER | SIZE | data_bytes`
-
-```c++
-std::string -> 0b000'01'011
-```
-
 ## Objects
 
 The next two bits of the HEADER indicates the type of key.
@@ -191,49 +185,75 @@ For boolean or string types the next bit indicates whether the type is a boolean
 
 Layout: `HEADER | SIZE | data_bytes`
 
-## Untyped Arrays
+## Generic Arrays
 
-Untyped arrays expect elements to have headers.
+Generic arrays expect elements to have headers.
 
 Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
 
-## Additional
+## Extensions
 
-The next three bits denote various additional structures.
+The next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specific use cases, such as variants, matrices, and complex numbers.
 
 ```c++
-0 -> type tag // for variant like structures
-1 -> data delimiter // for specs like Newline Delimited JSON
+0 -> data delimiter // for specs like Newline Delimited JSON
+1 -> type tag // for variant like structures
 2 -> matrices
+3 -> complex numbers
 ```
 
-### Type Tag (0)
-
-Expects a subsequent compressed unsigned integer to denote a type tag.
-
-Layout : `HEADER | SIZE (i.e. tag) | value`
-
-### Data Delimiter
+### 0 - Data Delimiter
 
 Expects additional data after the delimiter. Used to separate chunks of data to match a specifications like NDJSON and allow parallel thread reading.
 
-> IMPORTANT: The rest of the bits in the HEADER for Additional data are not guaranteed to be zero (in order to allow the specification to extend). Implementations must ignore these additional bits when checking this HEADER.
+### 1 - Type Tag
 
-### Matrices
+Expects a subsequent compressed unsigned integer to denote a type tag.
+
+Layout : `HEADER | SIZE (i.e. type tag) | value`
+
+### 2 - Matrices
 
 Matrices can be stored as object or array types. However, this tag provides a more compact mechanism to introspect matrices.
 
-The next bit defines the layout policy for the matrix.
+Matrices add a one byte MATRIX HEADER.
+
+The first bit of the matrix header denotes the data layout of the matrix.
 
 ```c++
-0 -> layout_right // row-major
-1 -> layout_left // column-major
+0 -> layout_right      0b00'000010 // row-major
+1 -> layout_left       0b01'000010 // column-major
 ```
 
-Layout: `HEADER | EXTENTS | HEADER | data`
+Layout: `HEADER | MATRIX HEADER | EXTENTS | HEADER | data`
 
 EXTENTS are written out as a typed array of unsigned integers. Refer to the specification for typed arrays.
 
-## Enums
+### 3 - Complex Numbers
 
-Enumerations are passed in their integer form.
+An additional COMPLEX HEADER byte is used.
+
+- Complex numbers are stored as pairs of numerical types.
+
+The first three bits denote whether this is a single complex number or a complex array.
+
+```c++
+0 -> complex number
+1 -> complex array
+```
+
+For a single complex number the layout is: `HEADER | COMPLEX HEADER | value`
+
+For a complex array the layout is: `HEADER | COMPLEX HEADER | SIZE | data`
+
+> Three bits are used to align the left bits with the layouts for numbers.
+
+The next two bits denote the numerical type:
+
+```c++
+0 -> floating point      0b000'00'000
+1 -> signed integer      0b000'01'000
+2 -> unsigned integer    0b000'10'000
+```
+
+The next three bits are used as the BYTE COUNT.
