@@ -108,8 +108,8 @@ Null is simply the value of `0`
 The next bit of the HEADER indicates true or false.
 
 ```c++
-0b0000'0'001 == false
-0b0000'1'001 == true
+false      0b0000'0'001
+true       0b0000'1'001
 ```
 
 ## Numbers
@@ -129,22 +129,22 @@ Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types
 See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 
 ```c++
-float -> 0b010'00'010 // 32bit
-double -> 0b011'00'010 // 64bit
+float         0b010'00'010 // 32bit
+double        0b011'00'010 // 64bit
 ```
 
 ```c++
-int8_t  -> 0b000'01'010
-int16_t -> 0b001'01'010
-int32_t -> 0b010'01'010
-int64_t -> 0b011'01'010
+int8_t        0b000'01'010
+int16_t       0b001'01'010
+int32_t       0b010'01'010
+int64_t       0b011'01'010
 ```
 
 ```c++
-uint8_t  -> 0b000'10'010
-uint16_t -> 0b001'10'010
-uint32_t -> 0b010'10'010
-uint64_t -> 0b011'10'010
+uint8_t       0b000'10'010
+uint16_t      0b001'10'010
+uint32_t      0b010'10'010
+uint64_t      0b011'10'010
 ```
 
 ## Objects
