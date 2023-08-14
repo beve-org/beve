@@ -124,7 +124,7 @@ The next two bits of the HEADER indicates whether the number is floating point, 
 
 The next three bits of the HEADER are used as the BYTE COUNT.
 
-Types conforming to [std::is_arithmetic](https://en.cppreference.com/w/cpp/types/is_arithmetic) are stored in the same manner as a `std::memcpy` call on the value.
+Numbers are stored in the same manner as a `std::memcpy` call on the value.
 
 See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 
