@@ -117,9 +117,9 @@ true       0b0000'1'001
 The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.
 
 ```c++
-0 -> floating point      0b000'00'000
-1 -> signed integer      0b000'01'000
-2 -> unsigned integer    0b000'10'000
+0 -> floating point      0b000'00'010
+1 -> signed integer      0b000'01'010
+2 -> unsigned integer    0b000'10'010
 ```
 
 The next three bits of the HEADER are used as the BYTE COUNT.
