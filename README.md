@@ -1,6 +1,10 @@
 # EVE - Efficient Versatile Encoding
 *High performance, tagged binary data specification like JSON.*
 
+> IMPORTANT ARCHIVAL NOTE:
+>
+> This format is under active testing and development. It is not yet recommended for long term archival use. It will be locked for archival use after thorough testing and carefully tweaking the specification.
+
 - Maps directly to and from JSON
 - Schema less, fully described, like JSON (can be used to store documents)
 - Little endian for maximum performance on modern CPUs
@@ -8,10 +12,6 @@
 - Future proof, supports large numerical types (such as 128 bit integers and higher)
 
 > EVE is much like CBOR or BSON, but is often more space efficient, and is much faster on modern hardware.
-
-> IMPORTANT ARCHIVAL NOTE:
->
-> This format is under active testing and development. It is not yet recommended for long term archival use. It will be locked for archival use after thorough testing and carefully tweaking the specification.
 
 ## Why Tagged Messages?
 
