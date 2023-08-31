@@ -31,7 +31,7 @@ The standard extension for EVE files is `.eve`
 
 ### C++
 
-- [Glaze](https://github.com/stephenberry/glaze)
+- [Glaze](https://github.com/stephenberry/glaze) (supports JSON and EVE through the same API)
 
 ## Right Most Bit Ordering
 
