@@ -36,7 +36,7 @@ The standard extension for EVE files is `.eve`
 ### Matlab
 
 - [load_eve.m](https://github.com/stephenberry/eve/blob/main/matlab/load_eve.m) (in this repository)
-  - This code is under active development
+  - This code is not yet complete
 
 ## Right Most Bit Ordering
 
