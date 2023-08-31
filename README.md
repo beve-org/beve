@@ -33,6 +33,11 @@ The standard extension for EVE files is `.eve`
 
 - [Glaze](https://github.com/stephenberry/glaze) (supports JSON and EVE through the same API)
 
+### Matlab
+
+- [load_eve.m](https://github.com/stephenberry/eve/blob/main/matlab/load_eve.m) (in this repository)
+  - This code is under active development
+
 ## Right Most Bit Ordering
 
 The right most bit is denoted as the first bit, or bit of index 0.
