@@ -148,7 +148,7 @@ uint32_t      0b010'10'001
 uint64_t      0b011'10'001
 ```
 
-## String
+## Strings
 
 Strings in EVE must be encoded with UTF-8.
 
@@ -162,7 +162,7 @@ If a string is less than 32 characters, the next five bits indicate the size of 
 
 Layout: `HEADER | data`
 
-### (3) General String
+### (3) String
 
 If the string is 32 or more characters then a SIZE indicator is used after the header.
 
