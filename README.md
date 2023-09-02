@@ -103,9 +103,13 @@ Null is simply `0`
 
 ## Boolean
 
+The next bit is set if the value is a boolean (otherwise null).
+
+The 5th bit is set to denote true or false.
+
 ```c++
 false      0b000'01'000
-true       0b000'10'000
+true       0b000'11'000
 ```
 
 ## Number
