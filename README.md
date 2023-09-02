@@ -165,9 +165,9 @@ Layout: `HEADER | SIZE | data`
 
 > If the string is being used as a key for an object, this general string format must be used even if the string is less than 32 characters, because the HEADER information is denoted in the object HEADER. There is no packing efficiency lost because headers are excluded.
 
-### Strings as object keys
+### Strings as Object Keys
 
-When strings are used as keys in objects the HEADER is not included, because the HEADER information is provided by the object's HEADER.
+When strings are used as keys in objects the HEADER is not included, because the HEADER information is provided by the object's HEADER. The same is true for typed string arrays.
 
 ## Object
 
@@ -207,9 +207,13 @@ For boolean or string types the next bit indicates whether the type is a boolean
 
 Layout: `HEADER | SIZE | data`
 
-### Boolean arrays
+### Boolean Arrays
 
 Boolean arrays are stored using single bits for booleans and packed to the nearest byte.
+
+### String Arrays
+
+String arrays do not include the string HEADER for each element, because the information has already been supplied. Like object keys, string arrays must not use the short string spec, instead use the general string spec.
 
 ## Generic Array
 
