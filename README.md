@@ -189,6 +189,6 @@ Generic arrays expect elements to have headers.
 
 Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
 
-# [Extensions](/extensions.md)
+# [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
 
-See [extensions.md](/extensions.md) for additional extension specifications. These are considered to be a formal part of the EVE specification, but are not expected to be as broadly implemented.
+See [extensions.md](https://github.com/stephenberry/eve/blob/main/extensions.md) for additional extension specifications. These are considered to be a formal part of the EVE specification, but are not expected to be as broadly implemented.
