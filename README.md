@@ -98,11 +98,11 @@ The first three bits describe the type via the following numerical values:
 7 -> extensions          0b00000'111
 ```
 
-## Null
+## (0) Null
 
 Null is simply `0`
 
-## Boolean
+## (0) Boolean
 
 The next bit is set if the value is a boolean (otherwise null).
 
@@ -113,7 +113,7 @@ false      0b000'01'000
 true       0b000'11'000
 ```
 
-## Number
+## (1) Number
 
 The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.
 
@@ -152,7 +152,7 @@ uint64_t      0b011'10'001
 
 Strings in EVE must be encoded with UTF-8.
 
-### Small String
+### (2) Small String
 
 If a string is less than 32 characters, the next five bits indicate the size of the string.
 
@@ -162,19 +162,19 @@ If a string is less than 32 characters, the next five bits indicate the size of 
 
 Layout: `HEADER | data`
 
-### General String
+### (3) General String
 
 If the string is 32 or more characters then a SIZE indicator is used after the header.
 
 Layout: `HEADER | SIZE | data`
 
-### Strings as Object Keys or Typed String Arrays
+### (3) Strings as Object Keys or Typed String Arrays
 
 When strings are used as keys in objects or typed string arrays the HEADER is not included, because the HEADER information is provided by the object's HEADER.
 
 Layout: `SIZE | data`
 
-## Object
+## (4) Object
 
 The next two bits of the HEADER indicates the type of key.
 
@@ -190,7 +190,7 @@ For integer keys the next three bits of the HEADER indicate the BYTE COUNT.
 
 Layout: `HEADER | SIZE | key[0] | HEADER[0] | value[0] | ... key[N] | HEADER[N] | value[N]`
 
-## Typed Array
+## (5) Typed Array
 
 The next two bits indicate the type stored in the array:
 
@@ -220,12 +220,12 @@ Boolean arrays are stored using single bits for booleans and packed to the neare
 
 String arrays do not include the string HEADER for each element, because the information has already been supplied.
 
-## Generic Array
+## (6) Generic Array
 
 Generic arrays expect elements to have headers.
 
 Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
 
-# [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
+# (7) [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
 
 See [extensions.md](https://github.com/stephenberry/eve/blob/main/extensions.md) for additional extension specifications. These are considered to be a formal part of the EVE specification, but are not expected to be as broadly implemented.
