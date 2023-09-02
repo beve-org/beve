@@ -87,9 +87,9 @@ Every value begins with a byte header. Any unspecified bits must be set to zero.
 The first three bits describe the type via the following numerical values:
 
 ```c++
-0 -> null                0b00000'000
-1 -> boolean             0b00000'001
-2 -> number              0b00000'010
+0 -> null or boolean     0b00000'000
+1 -> number              0b00000'001
+2 -> small string        0b00000'010
 3 -> string              0b00000'011
 4 -> object              0b00000'100
 5 -> typed array         0b00000'101
@@ -99,15 +99,13 @@ The first three bits describe the type via the following numerical values:
 
 ## Null
 
-Null is simply the value of `0`
+Null is simply `0`
 
 ## Boolean
 
-The next bit of the HEADER indicates true or false.
-
 ```c++
-false      0b0000'0'001
-true       0b0000'1'001
+false      0b000'01'000
+true       0b000'10'000
 ```
 
 ## Number
@@ -115,60 +113,59 @@ true       0b0000'1'001
 The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.
 
 ```c++
-0 -> floating point      0b000'00'010
-1 -> signed integer      0b000'01'010
-2 -> unsigned integer    0b000'10'010
+0 -> floating point      0b000'00'001
+1 -> signed integer      0b000'01'001
+2 -> unsigned integer    0b000'10'001
 ```
 
 The next three bits of the HEADER are used as the BYTE COUNT.
 
-Numbers are stored in the same manner as a `std::memcpy` call on the value.
-
-See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
+> Numbers are stored in the same manner as a `std::memcpy` call on the value.
+>
+> See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 
 ```c++
-float         0b010'00'010 // 32bit
-double        0b011'00'010 // 64bit
+float         0b010'00'001 // 32bit
+double        0b011'00'001 // 64bit
 ```
 
 ```c++
-int8_t        0b000'01'010
-int16_t       0b001'01'010
-int32_t       0b010'01'010
-int64_t       0b011'01'010
+int8_t        0b000'01'001
+int16_t       0b001'01'001
+int32_t       0b010'01'001
+int64_t       0b011'01'001
 ```
 
 ```c++
-uint8_t       0b000'10'010
-uint16_t      0b001'10'010
-uint32_t      0b010'10'010
-uint64_t      0b011'10'010
+uint8_t       0b000'10'001
+uint16_t      0b001'10'001
+uint32_t      0b010'10'001
+uint64_t      0b011'10'001
 ```
 
 ## String
 
 Strings in EVE must be encoded with UTF-8.
 
-- There are three layout options for strings in various contexts.
+### Small String
 
-The next five bits in the header are used for the size of short strings, unless all bits are ones:
-
-```c++
-0bXXXXX'011 // a short string with size stored in XXXXX
-0b11111'011 // a long string
-```
-
-### Short strings
-
-If the string is less than 31 characters the next five bits indicate the size of the string.
+If a string is less than 32 characters, the next five bits indicate the size of the string.
 
 Layout: `HEADER | data`
 
-### Long strings
+The next five bits in the header are used for the size of short strings, unless all five bits are ones:
 
-If the string is 31 or more characters then a SIZE indicator is used after the header.
+```c++
+0bXXXXX'010 // a small string with size stored in XXXXX
+```
+
+### General String
+
+If the string is 32 or more characters then a SIZE indicator is used after the header.
 
 Layout: `HEADER | SIZE | data`
+
+> If the string is being used as a key for an object, this general string format must be used even if the string is less than 32 characters, because the HEADER information is denoted in the object HEADER. There is no packing efficiency lost because headers are excluded.
 
 ### Strings as object keys
 
@@ -186,7 +183,7 @@ The next two bits of the HEADER indicates the type of key.
 
 For integer keys the next three bits of the HEADER indicate the BYTE COUNT.
 
-> Object keys must not contain a HEADER as the type of the key has already been defined.
+> Object keys must not contain a HEADER as the type of the key has already been defined. Therefore, the small string format is not applicable here. Use the general string format.
 
 Layout: `HEADER | SIZE | key[0] | HEADER[0] | value[0] | ... key[N] | HEADER[N] | value[N]`
 
