@@ -62,8 +62,6 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 > Wherever all caps `BYTE COUNT` is used, it describes this count indicator.
 
-Mathematically, this is log2(x)
-
 | #    | Number of bytes |
 | ---- | --------------- |
 | 0    | 1               |
