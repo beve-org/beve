@@ -1,15 +1,18 @@
 # EVE - Efficient Versatile Encoding
-*High performance, tagged binary data specification like JSON.*
+*High performance, tagged binary data specification like JSON, MessagePack, etc.*
 
 > IMPORTANT ARCHIVAL NOTE:
 >
 > This format is under active testing and development. It is not yet recommended for long term archival use. It will be locked for archival use after thorough testing and carefully tweaking the specification.
 
-- Maps directly to and from JSON
+- Maps to and from JSON
 - Schema less, fully described, like JSON (can be used to store documents)
 - Little endian for maximum performance on modern CPUs
+- Blazingly fast, designed for SIMD
 - Efficiently packed, stores bit packed tags and values efficiently
 - Future proof, supports large numerical types (such as 128 bit integers and higher)
+- Supports matrices and complex numbers
+- Simple spec, designed to be easy to integrate
 
 > EVE is much like CBOR or BSON, but is often more space efficient, and is much faster on modern hardware.
 
