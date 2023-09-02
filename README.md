@@ -151,13 +151,11 @@ Strings in EVE must be encoded with UTF-8.
 
 If a string is less than 32 characters, the next five bits indicate the size of the string.
 
-Layout: `HEADER | data`
-
-The next five bits in the header are used for the size of short strings, unless all five bits are ones:
-
 ```c++
 0bXXXXX'010 // a small string with size stored in XXXXX
 ```
+
+Layout: `HEADER | data`
 
 ### General String
 
@@ -200,14 +198,14 @@ The next two bits indicate the type stored in the array:
 
 For integral and floating point types, the next three bits of the type header are the BYTE COUNT.
 
-```c++
-0 -> boolean
-1 -> string
-```
-
 For boolean or string types the next bit indicates whether the type is a boolean or a string
 
-Layout: `HEADER | SIZE | data_bytes`
+```c++
+0 -> boolean // packed as single bits to the nearest byte
+1 -> string // an array of strings, this does not denote an array of characters
+```
+
+Layout: `HEADER | SIZE | data`
 
 ### Boolean arrays
 
