@@ -51,7 +51,7 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 > Wherever all caps `SIZE` is used in the specification, it refers to a size indicator that uses a compressed unsigned integer.
 
-| `config` #          | Number of Bytes | Integer Value (N)                |
+| #                   | Number of Bytes | Integer Value (N)                |
 | ------------------- | --------------- | -------------------------------- |
 | 0     `0b000000'00` | 1               | N < 64 `[2^6]`                   |
 | 1     `0b000000'01` | 2               | N < 16384 `[2^14]`               |
@@ -64,16 +64,16 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 Mathematically, this is log2(x)
 
-| `config` # | Number of bytes |
-| ---------- | --------------- |
-| 0          | 1               |
-| 1          | 2               |
-| 2          | 4               |
-| 3          | 8               |
-| 4          | 16              |
-| 5          | 32              |
-| 6          | 64              |
-| 7          | 128             |
+| #    | Number of bytes |
+| ---- | --------------- |
+| 0    | 1               |
+| 1    | 2               |
+| 2    | 4               |
+| 3    | 8               |
+| 4    | 16              |
+| 5    | 32              |
+| 6    | 64              |
+| 7    | 128             |
 
 ```c++
 // In C++ you can compute the byte count via:
