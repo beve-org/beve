@@ -168,7 +168,7 @@ If the string is 32 or more characters then a SIZE indicator is used after the h
 
 Layout: `HEADER | SIZE | data`
 
-### (3) Strings as Object Keys or Typed String Arrays
+### Strings as Object Keys or Typed String Arrays
 
 When strings are used as keys in objects or typed string arrays the HEADER is not included, because the HEADER information is provided by the object's HEADER.
 
