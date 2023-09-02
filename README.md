@@ -80,7 +80,7 @@ constexpr uint8_t byte_count = std::bit_width(sizeof(T)) - 1;
 
 ## Header
 
-The value begins with a byte header. Any unspecified bits must be set to zero.
+Every value begins with a byte header. Any unspecified bits must be set to zero.
 
 > Wherever all caps `HEADER` is used, it describes this header.
 
@@ -101,7 +101,7 @@ The first three bits describe the type via the following numerical values:
 
 Null is simply the value of `0`
 
-## Booleans
+## Boolean
 
 The next bit of the HEADER indicates true or false.
 
@@ -110,7 +110,7 @@ false      0b0000'0'001
 true       0b0000'1'001
 ```
 
-## Numbers
+## Number
 
 The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.
 
@@ -145,7 +145,36 @@ uint32_t      0b010'10'010
 uint64_t      0b011'10'010
 ```
 
-## Objects
+## String
+
+Strings in EVE must be encoded with UTF-8.
+
+- There are three layout options for strings in various contexts.
+
+The next five bits in the header are used for the size of short strings, unless all bits are ones:
+
+```c++
+0bXXXXX'011 // a short string with size stored in XXXXX
+0b11111'011 // a long string
+```
+
+### Short strings
+
+If the string is less than 31 characters the next five bits indicate the size of the string.
+
+Layout: `HEADER | data`
+
+### Long strings
+
+If the string is 31 or more characters then a SIZE indicator is used after the header.
+
+Layout: `HEADER | SIZE | data`
+
+### Strings as object keys
+
+When strings are used as keys in objects the HEADER is not included, because the HEADER information is provided by the object's HEADER.
+
+## Object
 
 The next two bits of the HEADER indicates the type of key.
 
@@ -155,13 +184,13 @@ The next two bits of the HEADER indicates the type of key.
 2 -> unsigned integer
 ```
 
-The next three bits of the HEADER indicate the BYTE COUNT used for the integer type (integer keys) or the character type (string keys).
+For integer keys the next three bits of the HEADER indicate the BYTE COUNT.
 
 > Object keys must not contain a HEADER as the type of the key has already been defined.
 
 Layout: `HEADER | SIZE | key[0] | HEADER[0] | value[0] | ... key[N] | HEADER[N] | value[N]`
 
-## Typed Arrays
+## Typed Array
 
 The next two bits indicate the type stored in the array:
 
@@ -179,11 +208,15 @@ For integral and floating point types, the next three bits of the type header ar
 1 -> string
 ```
 
-For boolean or string types the next bit indicates whether the type is a boolean or a string. The last two bits are used as the BYTE COUNT for the character size of the string. Boolean arrays are stored using single bits for booleans and packed to the nearest byte.
+For boolean or string types the next bit indicates whether the type is a boolean or a string
 
 Layout: `HEADER | SIZE | data_bytes`
 
-## Generic Arrays
+### Boolean arrays
+
+Boolean arrays are stored using single bits for booleans and packed to the nearest byte.
+
+## Generic Array
 
 Generic arrays expect elements to have headers.
 
