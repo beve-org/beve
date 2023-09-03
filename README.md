@@ -100,6 +100,12 @@ The first three bits describe the type via the following numerical values:
 7 -> extensions          0b00000'111
 ```
 
+## Nomenclature
+
+Wherever `DATA` is used, it denotes bytes of data without a `HEADER`.
+
+Wherever `VALUE` is used, it denotes a binary structure that begins with a `HEADER`.
+
 ## 0 - Null
 
 Null is simply `0`
@@ -166,19 +172,19 @@ If a string is less than 32 characters, the next five bits indicate the size of 
 0bXXXXX'010 // a small string with size stored in XXXXX
 ```
 
-Layout: `HEADER | data`
+Layout: `HEADER | DATA`
 
 ### 3 - String
 
 If the string is 32 or more characters then a SIZE indicator is used after the header.
 
-Layout: `HEADER | SIZE | data`
+Layout: `HEADER | SIZE | DATA`
 
 ### Strings as Object Keys or Typed String Arrays
 
 When strings are used as keys in objects or typed string arrays the HEADER is not included, because the HEADER information is provided by the object's HEADER.
 
-Layout: `SIZE | data`
+Layout: `SIZE | DATA`
 
 ## 4 - Object
 
@@ -192,9 +198,9 @@ The next two bits of the HEADER indicates the type of key.
 
 For integer keys the next three bits of the HEADER indicate the BYTE COUNT.
 
-> Object keys must not contain a HEADER as the type of the key has already been defined.
+> An object `KEY` must not contain a HEADER as the type of the key has already been defined.
 
-Layout: `HEADER | SIZE | key[0] | HEADER[0] | value[0] | ... key[N] | HEADER[N] | value[N]`
+Layout: `HEADER | SIZE | KEY[0] | VALUE[0] | ... KEY[N] | VALUE[N]`
 
 ## 5 - Typed Array
 
@@ -226,11 +232,13 @@ Boolean arrays are stored using single bits for booleans and packed to the neare
 
 String arrays do not include the string HEADER for each element, because the information has already been supplied.
 
+Layout for arrays of strings: `HEADER | SIZE | string[0] | ... string[N]`
+
 ## 6 - Generic Array
 
 Generic arrays expect elements to have headers.
 
-Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
+Layout: `HEADER | SIZE | VALUE[0] | ... VALUE[N]`
 
 # 7 - [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
 
