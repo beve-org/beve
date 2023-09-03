@@ -4,6 +4,8 @@
 > IMPORTANT ARCHIVAL NOTE:
 >
 > This format is under active testing and development. It is not yet recommended for long term archival use. It will be locked for archival use after thorough testing and carefully tweaking the specification.
+>
+> See [Discussions](https://github.com/stephenberry/eve/discussions) for polls and active development on the specification.
 
 - Maps to and from JSON
 - Schema less, fully described, like JSON (can be used to store documents)
