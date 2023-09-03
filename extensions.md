@@ -17,7 +17,7 @@ Expects additional data after the delimiter. Used to separate chunks of data to 
 
 Expects a subsequent compressed unsigned integer to denote a type tag.
 
-Layout : `HEADER | SIZE (i.e. type tag) | value`
+Layout : `HEADER | SIZE (i.e. type tag) | VALUE`
 
 ## 2 - Matrices
 
@@ -32,9 +32,11 @@ The first bit of the matrix header denotes the data layout of the matrix.
 1 -> layout_left       0b01'000010 // column-major
 ```
 
-Layout: `HEADER | MATRIX HEADER | EXTENTS | HEADER | data`
+Layout: `HEADER | MATRIX HEADER | EXTENTS | VALUE`
 
-EXTENTS are written out as a typed array of unsigned integers. Refer to the specification for typed arrays.
+EXTENTS are written out as a typed array of unsigned integers.
+
+> The VALUE in the matrix must be a typed array of numerical data.
 
 ## 3 - Complex Numbers
 
@@ -49,11 +51,11 @@ The first three bits denote whether this is a single complex number or a complex
 1 -> complex array
 ```
 
-For a single complex number the layout is: `HEADER | COMPLEX HEADER | value`
+For a single complex number the layout is: `HEADER | COMPLEX HEADER | DATA`
 
 > A complex value is a pair of numbers.
 
-For a complex array the layout is: `HEADER | COMPLEX HEADER | SIZE | data`
+For a complex array the layout is: `HEADER | COMPLEX HEADER | SIZE | DATA`
 
 > Three bits are used to align the left bits with the layouts for numbers.
 
