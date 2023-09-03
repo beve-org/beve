@@ -130,8 +130,10 @@ The next three bits of the HEADER are used as the BYTE COUNT.
 > See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 
 ```c++
-float         0b010'00'001 // 32bit
-double        0b011'00'001 // 64bit
+float16_t     0b001'00'001
+float         0b010'00'001 // float32_t
+double        0b011'00'001 // float64_t
+float128_t    0b100'00'001
 ```
 
 ```c++
@@ -139,6 +141,7 @@ int8_t        0b000'01'001
 int16_t       0b001'01'001
 int32_t       0b010'01'001
 int64_t       0b011'01'001
+int128_t      0b111'01'001
 ```
 
 ```c++
@@ -146,6 +149,7 @@ uint8_t       0b000'10'001
 uint16_t      0b001'10'001
 uint32_t      0b010'10'001
 uint64_t      0b011'10'001
+uint128_t     0b111'10'001
 ```
 
 ## Strings
