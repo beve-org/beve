@@ -58,12 +58,12 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 > Wherever all caps `SIZE` is used in the specification, it refers to a size indicator that uses a compressed unsigned integer.
 
-| #                   | Number of Bytes | Integer Value (N)                |
-| ------------------- | --------------- | -------------------------------- |
-| 0     `0b000000'00` | 1               | N < 64 `[2^6]`                   |
-| 1     `0b000000'01` | 2               | N < 16384 `[2^14]`               |
-| 2     `0b000000'10` | 4               | N < 1073741824 `[2^30]`          |
-| 3     `0b000000'11` | 8               | N < 4611686018427387904 `[2^62]` |
+| #    | Number of Bytes | Integer Value (N)                |
+| ---- | --------------- | -------------------------------- |
+| 0    | 1               | N < 64 `[2^6]`                   |
+| 1    | 2               | N < 16384 `[2^14]`               |
+| 2    | 4               | N < 1073741824 `[2^30]`          |
+| 3    | 8               | N < 4611686018427387904 `[2^62]` |
 
 ## Byte Count Indicator
 
