@@ -67,7 +67,7 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 ## Byte Count Indicator
 
-> Wherever all caps `BYTE COUNT` is used, it describes this count indicator.
+> Wherever all caps `BYTE COUNT` is used, it describes this mapping.
 
 ```c++
 #      Number of bytes
