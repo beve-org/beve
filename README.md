@@ -161,19 +161,15 @@ uint64_t      0b011'10'001
 uint128_t     0b111'10'001
 ```
 
-## Strings
+## 2 - Strings
 
 Strings must be encoded with UTF-8.
-
-### 2 - String
-
-If the string is 32 or more characters then a SIZE indicator is used after the header.
 
 Layout: `HEADER | SIZE | DATA`
 
 ### Strings as Object Keys or Typed String Arrays
 
-When strings are used as keys in objects or typed string arrays the HEADER is not included, because the HEADER information is provided by the object's HEADER.
+When strings are used as keys in objects or typed string arrays the HEADER is not included.
 
 Layout: `SIZE | DATA`
 
