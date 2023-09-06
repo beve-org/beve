@@ -40,8 +40,13 @@ The standard extension for EVE files is `.eve`
 
 ### Matlab
 
-- [load_eve.m](https://github.com/stephenberry/eve/blob/main/matlab/load_eve.m) (in this repository)
-  - This code is not yet complete
+- [load_eve.m](https://github.com/stephenberry/eve/blob/main/matlab/load_eve.m) (this repository)
+  - Work in progress
+
+### Python
+
+- [load_eve.py](https://github.com/stephenberry/eve/blob/main/python/load_eve.py) (this repository)
+  - Work in progress
 
 ## Right Most Bit Ordering
 
@@ -227,6 +232,6 @@ Generic arrays expect elements to have headers.
 
 Layout: `HEADER | SIZE | VALUE[0] | ... VALUE[N]`
 
-# 6 - [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
+## 6 - [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
 
 See [extensions.md](https://github.com/stephenberry/eve/blob/main/extensions.md) for additional extension specifications. These are considered to be a formal part of the EVE specification, but are not expected to be as broadly implemented.
