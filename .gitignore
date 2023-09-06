@@ -1,2 +1,6 @@
-
-.DS_Store
+/build
+*.DS_Store
+*.eve
+*.cache
+*.vscode
+*.json
