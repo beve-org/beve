@@ -1,17 +1,22 @@
 # EVE - Efficient Versatile Encoding
-*High performance, tagged binary data specification like JSON.*
+*High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.*
 
 > IMPORTANT ARCHIVAL NOTE:
 >
 > This format is under active testing and development. It is not yet recommended for long term archival use. It will be locked for archival use after thorough testing and carefully tweaking the specification.
+>
+> See [Discussions](https://github.com/stephenberry/eve/discussions) for polls and active development on the specification.
 
-- Maps directly to and from JSON
-- Schema less, fully described, like JSON (can be used to store documents)
+- Maps to and from JSON
+- Schema less, fully described, like JSON (can be used in documents)
 - Little endian for maximum performance on modern CPUs
+- Blazingly fast, designed for SIMD
 - Efficiently packed, stores bit packed tags and values efficiently
 - Future proof, supports large numerical types (such as 128 bit integers and higher)
+- Designed for scientific computing, supports [brain floats](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), matrices, and complex numbers
+- Simple spec, designed to be easy to integrate
 
-> EVE is much like CBOR or BSON, but is often more space efficient, and is much faster on modern hardware.
+> EVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for large, numerical arrays.
 
 ## Why Tagged Messages?
 
@@ -48,7 +53,7 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 > Wherever all caps `SIZE` is used in the specification, it refers to a size indicator that uses a compressed unsigned integer.
 
-| `config` #          | Number of Bytes | Integer Value (N)                |
+| #                   | Number of Bytes | Integer Value (N)                |
 | ------------------- | --------------- | -------------------------------- |
 | 0     `0b000000'00` | 1               | N < 64 `[2^6]`                   |
 | 1     `0b000000'01` | 2               | N < 16384 `[2^14]`               |
@@ -59,93 +64,116 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 > Wherever all caps `BYTE COUNT` is used, it describes this count indicator.
 
-Mathematically, this is log2(x)
-
-| `config` # | Number of bytes |
-| ---------- | --------------- |
-| 0          | 1               |
-| 1          | 2               |
-| 2          | 4               |
-| 3          | 8               |
-| 4          | 16              |
-| 5          | 32              |
-| 6          | 64              |
-| 7          | 128             |
+| #    | Number of bytes |
+| ---- | --------------- |
+| 0    | 1               |
+| 1    | 2               |
+| 2    | 4               |
+| 3    | 8               |
+| 4    | 16              |
+| 5    | 32              |
+| 6    | 64              |
+| 7    | 128             |
 
 ```c++
-// In C++ you can compute the byte count via:
+// C++ computation of the byte count indicator:
 template <class T>
-constexpr uint8_t byte_count = std::bit_width(sizeof(T)) - 1;
+constexpr uint8_t byte_count_indicator = std::bit_width(sizeof(T)) - 1;
 ```
 
 ## Header
 
-The value begins with a byte header. Any unspecified bits must be set to zero.
+Every `VALUE` begins with a byte header. Any unspecified bits must be set to zero.
 
 > Wherever all caps `HEADER` is used, it describes this header.
 
-The first three bits describe the type via the following numerical values:
+The first three bits denote types:
 
 ```c++
-0 -> null                0b00000'000
-1 -> boolean             0b00000'001
-2 -> number              0b00000'010
-3 -> string              0b00000'011
-4 -> object              0b00000'100
-5 -> typed array         0b00000'101
-6 -> generic array       0b00000'110
-7 -> extensions          0b00000'111
+0 -> null or boolean                          0b00000'000
+1 -> number                                   0b00000'001
+2 -> string                                   0b00000'010
+3 -> object                                   0b00000'011
+4 -> typed array                              0b00000'100
+5 -> generic array                            0b00000'101
+6 -> extension                                0b00000'110
+7 -> reserved                                 0b00000'111
 ```
 
-## Null
+## Nomenclature
 
-Null is simply the value of `0`
+Wherever `DATA` is used, it denotes bytes of data without a `HEADER`.
 
-## Booleans
+Wherever `VALUE` is used, it denotes a binary structure that begins with a `HEADER`.
 
-The next bit of the HEADER indicates true or false.
+## 0 - Null
+
+Null is simply `0`
+
+## 0 - Boolean
+
+The next bit is set to indicate a boolean. The 5th bit is set to denote true or false.
 
 ```c++
-false      0b0000'0'001
-true       0b0000'1'001
+false      0b000'01'000
+true       0b000'11'000
 ```
 
-## Numbers
+## 1 - Number
 
 The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.
 
+Float point types must conform to the IEEE-754 standard.
+
 ```c++
-0 -> floating point      0b000'00'010
-1 -> signed integer      0b000'01'010
-2 -> unsigned integer    0b000'10'010
+0 -> floating point      0b000'00'001
+1 -> signed integer      0b000'01'001
+2 -> unsigned integer    0b000'10'001
 ```
 
 The next three bits of the HEADER are used as the BYTE COUNT.
 
-Numbers are stored in the same manner as a `std::memcpy` call on the value.
+> Note: brain floats use a byte count indicator of 1, even though they use 2 bytes per value. This is used because float8_t is not supported and not typically useful.
 
-See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
+> See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 
 ```c++
-float         0b010'00'010 // 32bit
-double        0b011'00'010 // 64bit
+bfloat16_t    0b001'00'000 // brain float
+float16_t     0b001'00'001
+float32_t     0b010'00'001 // float
+float64_t     0b011'00'001 // double
+float128_t    0b100'00'001
 ```
 
 ```c++
-int8_t        0b000'01'010
-int16_t       0b001'01'010
-int32_t       0b010'01'010
-int64_t       0b011'01'010
+int8_t        0b000'01'001
+int16_t       0b001'01'001
+int32_t       0b010'01'001
+int64_t       0b011'01'001
+int128_t      0b111'01'001
 ```
 
 ```c++
-uint8_t       0b000'10'010
-uint16_t      0b001'10'010
-uint32_t      0b010'10'010
-uint64_t      0b011'10'010
+uint8_t       0b000'10'001
+uint16_t      0b001'10'001
+uint32_t      0b010'10'001
+uint64_t      0b011'10'001
+uint128_t     0b111'10'001
 ```
 
-## Objects
+## 2 - Strings
+
+Strings must be encoded with UTF-8.
+
+Layout: `HEADER | SIZE | DATA`
+
+### Strings as Object Keys or Typed String Arrays
+
+When strings are used as keys in objects or typed string arrays the HEADER is not included.
+
+Layout: `SIZE | DATA`
+
+## 3 - Object
 
 The next two bits of the HEADER indicates the type of key.
 
@@ -155,13 +183,13 @@ The next two bits of the HEADER indicates the type of key.
 2 -> unsigned integer
 ```
 
-The next three bits of the HEADER indicate the BYTE COUNT used for the integer type (integer keys) or the character type (string keys).
+For integer keys the next three bits of the HEADER indicate the BYTE COUNT.
 
-> Object keys must not contain a HEADER as the type of the key has already been defined.
+> An object `KEY` must not contain a HEADER as the type of the key has already been defined.
 
-Layout: `HEADER | SIZE | key[0] | HEADER[0] | value[0] | ... key[N] | HEADER[N] | value[N]`
+Layout: `HEADER | SIZE | KEY[0] | VALUE[0] | ... KEY[N] | VALUE[N]`
 
-## Typed Arrays
+## 4 - Typed Array
 
 The next two bits indicate the type stored in the array:
 
@@ -174,21 +202,31 @@ The next two bits indicate the type stored in the array:
 
 For integral and floating point types, the next three bits of the type header are the BYTE COUNT.
 
+For boolean or string types the next bit indicates whether the type is a boolean or a string
+
 ```c++
-0 -> boolean
-1 -> string
+0 -> boolean // packed as single bits to the nearest byte
+1 -> string // an array of strings (not an array of characters)
 ```
 
-For boolean or string types the next bit indicates whether the type is a boolean or a string. The last two bits are used as the BYTE COUNT for the character size of the string. Boolean arrays are stored using single bits for booleans and packed to the nearest byte.
+Layout: `HEADER | SIZE | data`
 
-Layout: `HEADER | SIZE | data_bytes`
+### Boolean Arrays
 
-## Generic Arrays
+Boolean arrays are stored using single bits for booleans and packed to the nearest byte.
+
+### String Arrays
+
+String arrays do not include the string HEADER for each element.
+
+Layout: `HEADER | SIZE | string[0] | ... string[N]`
+
+## 5 - Generic Array
 
 Generic arrays expect elements to have headers.
 
-Layout: `HEADER | SIZE | HEADER[0] | value[0] | ... HEADER[N] | value[N]`
+Layout: `HEADER | SIZE | VALUE[0] | ... VALUE[N]`
 
-# [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
+# 6 - [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
 
 See [extensions.md](https://github.com/stephenberry/eve/blob/main/extensions.md) for additional extension specifications. These are considered to be a formal part of the EVE specification, but are not expected to be as broadly implemented.
