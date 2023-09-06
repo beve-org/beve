@@ -1,5 +1,5 @@
 # EVE - Efficient Versatile Encoding
-*High performance, tagged binary data specification like JSON, MessagePack, etc.*
+*High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.*
 
 > IMPORTANT ARCHIVAL NOTE:
 >
@@ -8,15 +8,15 @@
 > See [Discussions](https://github.com/stephenberry/eve/discussions) for polls and active development on the specification.
 
 - Maps to and from JSON
-- Schema less, fully described, like JSON (can be used to store documents)
+- Schema less, fully described, like JSON (can be used in documents)
 - Little endian for maximum performance on modern CPUs
 - Blazingly fast, designed for SIMD
 - Efficiently packed, stores bit packed tags and values efficiently
 - Future proof, supports large numerical types (such as 128 bit integers and higher)
-- Supports matrices and complex numbers
+- Designed for scientific computing, supports [brain floats](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), matrices, and complex numbers
 - Simple spec, designed to be easy to integrate
 
-> EVE is much like CBOR or BSON, but is often more space efficient, and is much faster on modern hardware.
+> EVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for large, numerical arrays.
 
 ## Why Tagged Messages?
 
@@ -76,28 +76,28 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 | 7    | 128             |
 
 ```c++
-// In C++ you can compute the byte count via:
+// C++ computation of the byte count indicator:
 template <class T>
-constexpr uint8_t byte_count = std::bit_width(sizeof(T)) - 1;
+constexpr uint8_t byte_count_indicator = std::bit_width(sizeof(T)) - 1;
 ```
 
 ## Header
 
-Every value begins with a byte header. Any unspecified bits must be set to zero.
+Every `VALUE` begins with a byte header. Any unspecified bits must be set to zero.
 
 > Wherever all caps `HEADER` is used, it describes this header.
 
-The first three bits describe the type via the following numerical values:
+The first three bits denote types:
 
 ```c++
-0 -> null or boolean     0b00000'000
-1 -> number              0b00000'001
-2 -> small string        0b00000'010
-3 -> string              0b00000'011
-4 -> object              0b00000'100
-5 -> typed array         0b00000'101
-6 -> generic array       0b00000'110
-7 -> extensions          0b00000'111
+0 -> null or boolean                          0b00000'000
+1 -> number                                   0b00000'001
+2 -> string                                   0b00000'010
+3 -> object                                   0b00000'011
+4 -> typed array                              0b00000'100
+5 -> generic array                            0b00000'101
+6 -> extension                                0b00000'110
+7 -> reserved                                 0b00000'111
 ```
 
 ## Nomenclature
@@ -125,6 +125,8 @@ true       0b000'11'000
 
 The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.
 
+Float point types must conform to the IEEE-754 standard.
+
 ```c++
 0 -> floating point      0b000'00'001
 1 -> signed integer      0b000'01'001
@@ -133,14 +135,15 @@ The next two bits of the HEADER indicates whether the number is floating point, 
 
 The next three bits of the HEADER are used as the BYTE COUNT.
 
-> Numbers are stored in the same manner as a `std::memcpy` call on the value.
->
+> Note: brain floats use a byte count indicator of 1, even though they use 2 bytes per value. This is used because float8_t is not supported and not typically useful.
+
 > See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 
 ```c++
+bfloat16_t    0b001'00'000 // brain float
 float16_t     0b001'00'001
-float         0b010'00'001 // float32_t
-double        0b011'00'001 // float64_t
+float32_t     0b010'00'001 // float
+float64_t     0b011'00'001 // double
 float128_t    0b100'00'001
 ```
 
@@ -162,17 +165,7 @@ uint128_t     0b111'10'001
 
 ## Strings
 
-Strings in EVE must be encoded with UTF-8.
-
-### 2 - Small String
-
-If a string is less than 32 characters, the next five bits indicate the size of the string.
-
-```c++
-0bXXXXX'010 // a small string with size stored in XXXXX
-```
-
-Layout: `HEADER | DATA`
+Strings must be encoded with UTF-8.
 
 ### 3 - String
 

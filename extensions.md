@@ -1,6 +1,6 @@
 # EVE Extensions
 
-Following the first three HEADER bits, the next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specific use cases, such as variants, matrices, and complex numbers.
+Following the first three HEADER bits, the next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specialized use cases, such as variants, matrices, and complex numbers.
 
 ```c++
 0 -> data delimiter // for specs like Newline Delimited JSON
@@ -11,11 +11,11 @@ Following the first three HEADER bits, the next five bits denote various extensi
 
 ## 0 - Data Delimiter
 
-Expects additional data after the delimiter. Used to separate chunks of data to match a specifications like NDJSON and allow parallel thread reading.
+Used to separate chunks of data to match a specifications like [NDJSON](http://ndjson.org).
 
 ## 1 - Type Tag (Variants)
 
-Expects a subsequent compressed unsigned integer to denote a type tag.
+Expects a subsequent compressed unsigned integer to denote a type tag. A compressed SIZE indicator is used to efficiently store the tag.
 
 Layout : `HEADER | SIZE (i.e. type tag) | VALUE`
 
@@ -67,4 +67,4 @@ The next two bits denote the numerical type:
 2 -> unsigned integer    0b000'10'000
 ```
 
-The next three bits are used as the BYTE COUNT.
+The next three bits are used to indicate the BYTE COUNT. This is the same specification for EVE numbers.
