@@ -112,9 +112,7 @@ Null is simply `0`
 
 ## 0 - Boolean
 
-The next bit is set if the value is a boolean (otherwise null).
-
-The 5th bit is set to denote true or false.
+The next bit is set to indicate a boolean. The 5th bit is set to denote true or false.
 
 ```c++
 false      0b000'01'000
@@ -167,7 +165,7 @@ uint128_t     0b111'10'001
 
 Strings must be encoded with UTF-8.
 
-### 3 - String
+### 2 - String
 
 If the string is 32 or more characters then a SIZE indicator is used after the header.
 
@@ -179,7 +177,7 @@ When strings are used as keys in objects or typed string arrays the HEADER is no
 
 Layout: `SIZE | DATA`
 
-## 4 - Object
+## 3 - Object
 
 The next two bits of the HEADER indicates the type of key.
 
@@ -195,7 +193,7 @@ For integer keys the next three bits of the HEADER indicate the BYTE COUNT.
 
 Layout: `HEADER | SIZE | KEY[0] | VALUE[0] | ... KEY[N] | VALUE[N]`
 
-## 5 - Typed Array
+## 4 - Typed Array
 
 The next two bits indicate the type stored in the array:
 
@@ -227,12 +225,12 @@ String arrays do not include the string HEADER for each element, because the inf
 
 Layout for arrays of strings: `HEADER | SIZE | string[0] | ... string[N]`
 
-## 6 - Generic Array
+## 5 - Generic Array
 
 Generic arrays expect elements to have headers.
 
 Layout: `HEADER | SIZE | VALUE[0] | ... VALUE[N]`
 
-# 7 - [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
+# 6 - [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
 
 See [extensions.md](https://github.com/stephenberry/eve/blob/main/extensions.md) for additional extension specifications. These are considered to be a formal part of the EVE specification, but are not expected to be as broadly implemented.
