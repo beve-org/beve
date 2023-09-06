@@ -69,21 +69,16 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 > Wherever all caps `BYTE COUNT` is used, it describes this count indicator.
 
-| #    | Number of bytes |
-| ---- | --------------- |
-| 0    | 1               |
-| 1    | 2               |
-| 2    | 4               |
-| 3    | 8               |
-| 4    | 16              |
-| 5    | 32              |
-| 6    | 64              |
-| 7    | 128             |
-
 ```c++
-// C++ computation of the byte count indicator:
-template <class T>
-constexpr uint8_t byte_count_indicator = std::bit_width(sizeof(T)) - 1;
+#      Number of bytes
+0      1
+1      2
+2      4
+3      8
+4      16
+5      32
+6      64
+7      128
 ```
 
 ## Header
