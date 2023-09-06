@@ -22,7 +22,7 @@
 
 *Flexibility and efficiency*
 
-JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. Furthermore, extending specifications and adding more fields is far easier with tagged messages and unordered mapping.
+JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. Furthermore, extending specifications and adding more fields is far easier with tagged messages and unordered mapping. Tags also make the format much more human friendly.
 
 ## Endianness
 
