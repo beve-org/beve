@@ -22,7 +22,7 @@
 
 *Flexibility and efficiency*
 
-JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. A fixed binary message without tags means that the entire message must always be sent. Furthermore, extending specifications and adding more fields is far easier with tagged messages and unordered mapping.
+JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. Furthermore, extending specifications and adding more fields is far easier with tagged messages and unordered mapping.
 
 ## Endianness
 
