@@ -16,7 +16,7 @@
 - Designed for scientific computing, supports [brain floats](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), matrices, and complex numbers
 - Simple spec, designed to be easy to integrate
 
-> EVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for large, numerical arrays.
+> EVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for numerical arrays.
 
 ## Why Tagged Messages?
 
