@@ -206,7 +206,7 @@ For boolean or string types the next bit indicates whether the type is a boolean
 
 ```c++
 0 -> boolean // packed as single bits to the nearest byte
-1 -> string // an array of strings, this does not denote an array of characters
+1 -> string // an array of strings (not an array of characters)
 ```
 
 Layout: `HEADER | SIZE | data`
@@ -217,9 +217,9 @@ Boolean arrays are stored using single bits for booleans and packed to the neare
 
 ### String Arrays
 
-String arrays do not include the string HEADER for each element, because the information has already been supplied.
+String arrays do not include the string HEADER for each element.
 
-Layout for arrays of strings: `HEADER | SIZE | string[0] | ... string[N]`
+Layout: `HEADER | SIZE | string[0] | ... string[N]`
 
 ## 5 - Generic Array
 
