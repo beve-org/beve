@@ -15,7 +15,7 @@
 - Future proof, supports large numerical types (such as 128 bit integers and higher)
 - Designed for scientific computing, supports [brain floats](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), matrices, and complex numbers
 - Simple, designed to be easy to integrate
-- Efficiently compressed by LZ4, Brotli, gzip, etc.
+- Easily compressed by LZ4, Brotli, gzip, etc.
 
 > EVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for typed arrays.
 
