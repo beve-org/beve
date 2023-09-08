@@ -52,6 +52,10 @@ The standard extension for EVE files is `.eve`
 
 The right most bit is denoted as the first bit, or bit of index 0.
 
+## Concerning Compression
+
+Note that EVE is not a compression algorithm. It uses some bit packing to be more space efficient, but strings and numbers see no compression. This means that EVE binary is very compressible, like JSON, and it is encouraged to use compression algorithms like [LZ4](https://lz4.org), [Brotli](https://github.com/google/brotli), etc. where size is important.
+
 ## Compressed Unsigned Integer
 
 A compressed unsigned integer uses the first two bits to denote the number of bytes used to express an integer. The rest of the bits indicate the integer value.
