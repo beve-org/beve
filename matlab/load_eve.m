@@ -23,11 +23,14 @@ function data = read_value(fid)
     % Extract header components
     type = bitand(header, 0b00000111);
     switch type
-        case 0 % null
-            data = NaN;
-        case 1 % boolean
-            data = logical(bitshift(header, -3));
-        case 2 % number
+        case 0 % null or boolean
+            is_bool = bitshift(bitand(header, 0b00001000), -3);
+            if is_bool
+                data = logical(bitshift(bitand(header, 0b11100000), -5));
+            else
+                data = NaN;
+            end
+        case 1 % number
             num_type = bitshift(bitand(header, 0b00011000), -3);
             is_float = false;
             is_signed = false;
@@ -73,9 +76,9 @@ function data = read_value(fid)
                     end
                 end
             end
-        case 3 % string
+        case 2 % string
             error('TODO: support strings');
-        case 4 % object
+        case 3 % object
             key_type = bitshift(bitand(header, 0b00011000), -3);
             is_string = false;
             is_signed = false;
@@ -101,7 +104,7 @@ function data = read_value(fid)
                 end
             end
 
-        case 5 % typed array
+        case 4 % typed array
             num_type = bitshift(bitand(header, 0b00011000), -3);
             is_float = false;
             is_signed = false;
@@ -149,9 +152,9 @@ function data = read_value(fid)
                     end
                 end
             end
-        case 6 % untyped array
+        case 5 % untyped array
             error('TODO: support untyped arrays');
-        case 7 % extensions
+        case 6 % extensions
             extension = bitshift(bitand(header, 0b11111000), -3);
             switch extension
                 case 2 % matrices
