@@ -11,7 +11,6 @@
 - Schema less, fully described, like JSON (can be used in documents)
 - Little endian for maximum performance on modern CPUs
 - Blazingly fast, designed for SIMD
-- Efficiently packed, stores bit packed tags and values efficiently
 - Future proof, supports large numerical types (such as 128 bit integers and higher)
 - Designed for scientific computing, supports [brain floats](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), matrices, and complex numbers
 - Simple, designed to be easy to integrate
