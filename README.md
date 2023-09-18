@@ -17,6 +17,17 @@
 
 > EVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for typed arrays.
 
+## Performance vs MessagePack
+
+| Test                                                         | Libraries                                                    | Performance Ratio       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ----------------------- |
+| [Test Object](https://github.com/stephenberry/json_performance) | [Glaze](https://github.com/stephenberry/glaze) vs [msgpack-c](https://github.com/msgpack/msgpack-c) (c++) | 1.9X Read, 12.0X Write  |
+| `std::vector<double>`                                        | [Glaze](https://github.com/stephenberry/glaze) vs [msgpack-c](https://github.com/msgpack/msgpack-c) (c++) | 12.0X Read, 48.6X Write |
+
+[Performance test code](https://github.com/stephenberry/binary_performance)
+
+> Yes, EVE is often 5000% faster than MessagePack for writing arrays of numerical values. And, over 1000% faster when reading arrays of numerical values.
+
 ## Why Tagged Messages?
 
 *Flexibility and efficiency*
