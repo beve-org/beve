@@ -28,8 +28,8 @@ Matrices add a one byte MATRIX HEADER.
 The first bit of the matrix header denotes the data layout of the matrix.
 
 ```c++
-0 -> layout_right      0b00'000010 // row-major
-1 -> layout_left       0b01'000010 // column-major
+0 -> layout_right // row-major
+1 -> layout_left // column-major
 ```
 
 Layout: `HEADER | MATRIX HEADER | EXTENTS | VALUE`
