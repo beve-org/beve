@@ -1,5 +1,5 @@
 % Load a .beve file
-% Reference: https://github.com/stephenberry/eve
+% Reference: https://github.com/stephenberry/beve
 function data = load_beve(filename)
     fid = fopen(filename, 'rb');
     if fid == -1
