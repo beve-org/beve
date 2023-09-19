@@ -30,8 +30,6 @@ The following table lists the performance increase between EVE with [Glaze](http
 
 [Performance test code](https://github.com/stephenberry/binary_performance)
 
-> EVE is typically thousands of times faster than MessagePack for writing and reading arrays of numerical data.
-
 The table below shows binary message size versus EVE. A positive value means the binary produced is larger than EVE.
 
 | Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Message Size |
