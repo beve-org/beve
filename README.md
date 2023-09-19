@@ -104,6 +104,7 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 5      32
 6      64
 7      128
+...
 ```
 
 ## Header
