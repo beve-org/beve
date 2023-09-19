@@ -1,4 +1,4 @@
-# EVE - Efficient Versatile Encoding
+# BEVE - Binary Efficient Versatile Encoding
 *High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.*
 
 > IMPORTANT ARCHIVAL NOTE:
@@ -15,11 +15,11 @@
 - Designed for scientific computing, supports [brain floats](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), matrices, and complex numbers
 - Simple, designed to be easy to integrate
 
-> EVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for typed arrays.
+> BEVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for typed arrays.
 
 ## Performance vs MessagePack
 
-The following table lists the performance increase between EVE with [Glaze](https://github.com/stephenberry/glaze) versus other libraries and their binary formats. A benchmark of Glaze versus itself would yield 0% performance benefit.
+The following table lists the performance increase between BEVE with [Glaze](https://github.com/stephenberry/glaze) versus other libraries and their binary formats. A benchmark of Glaze versus itself would yield 0% performance benefit.
 
 | Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Read (% Faster) | Write (% Faster) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------------- | ---------------- |
@@ -30,7 +30,7 @@ The following table lists the performance increase between EVE with [Glaze](http
 
 [Performance test code](https://github.com/stephenberry/binary_performance)
 
-The table below shows binary message size versus EVE. A positive value means the binary produced is larger than EVE.
+The table below shows binary message size versus BEVE. A positive value means the binary produced is larger than BEVE.
 
 | Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Message Size |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
@@ -51,13 +51,13 @@ The endianness must be `little endian`.
 
 ## File Extension
 
-The standard extension for EVE files is `.eve`
+The standard extension for BEVE files is `.beve`
 
 ## Implementations
 
 ### C++
 
-- [Glaze](https://github.com/stephenberry/glaze) (supports JSON and EVE through the same API)
+- [Glaze](https://github.com/stephenberry/glaze) (supports JSON and BEVE through the same API)
 
 ### Matlab
 
@@ -75,7 +75,7 @@ The right most bit is denoted as the first bit, or bit of index 0.
 
 ## Concerning Compression
 
-Note that EVE is not a compression algorithm. It uses some bit packing to be more space efficient, but strings and numerical values see no compression. This means that EVE binary is very compressible, like JSON, and it is encouraged to use compression algorithms like [LZ4](https://lz4.org), [Zstandard](https://github.com/facebook/zstd), [Brotli](https://github.com/google/brotli), etc. where size is critical.
+Note that BEVE is not a compression algorithm. It uses some bit packing to be more space efficient, but strings and numerical values see no compression. This means that BEVE binary is very compressible, like JSON, and it is encouraged to use compression algorithms like [LZ4](https://lz4.org), [Zstandard](https://github.com/facebook/zstd), [Brotli](https://github.com/google/brotli), etc. where size is critical.
 
 ## Compressed Unsigned Integer
 
@@ -255,4 +255,4 @@ Layout: `HEADER | SIZE | VALUE[0] | ... VALUE[N]`
 
 ## 6 - [Extensions](https://github.com/stephenberry/eve/blob/main/extensions.md)
 
-See [extensions.md](https://github.com/stephenberry/eve/blob/main/extensions.md) for additional extension specifications. These are considered to be a formal part of the EVE specification, but are not expected to be as broadly implemented.
+See [extensions.md](https://github.com/stephenberry/eve/blob/main/extensions.md) for additional extension specifications. These are considered to be a formal part of the BEVE specification, but are not expected to be as broadly implemented.
