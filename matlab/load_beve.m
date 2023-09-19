@@ -1,6 +1,6 @@
 % Load a .beve file
 % Reference: https://github.com/stephenberry/eve
-function data = load_eve(filename)
+function data = load_beve(filename)
     fid = fopen(filename, 'rb');
     if fid == -1
         error('Failed to open file');
