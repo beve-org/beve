@@ -34,7 +34,7 @@ The table below shows binary message size versus EVE. A positive value means the
 
 | Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Message Size |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
-| [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | -4%          |
+| [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | -3.4%        |
 | double array                                                 | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +12%         |
 | float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +25%         |
 | uint16_t array                                               | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +50%         |
