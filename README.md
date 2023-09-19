@@ -19,10 +19,12 @@
 
 ## Performance vs MessagePack
 
-| Test                                                         | Libraries                                                    | Performance Ratio       |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ----------------------- |
-| [Test Object](https://github.com/stephenberry/json_performance) | [Glaze](https://github.com/stephenberry/glaze) vs [msgpack-c](https://github.com/msgpack/msgpack-c) (c++) | 1.9X Read, 12.0X Write  |
-| `std::vector<double>`                                        | [Glaze](https://github.com/stephenberry/glaze) vs [msgpack-c](https://github.com/msgpack/msgpack-c) (c++) | 12.0X Read, 48.6X Write |
+The following table lists the performance increase between EVE with [Glaze](https://github.com/stephenberry/glaze) versus other libraries and their binary formats. A benchmark of Glaze versus itself would yield 0% performance benefit.
+
+| Test                                                         | Libraries                                                    | Read (% Faster) | Write (% Faster) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | --------------- | ---------------- |
+| [Test Object](https://github.com/stephenberry/json_performance) | [Glaze](https://github.com/stephenberry/glaze) vs [msgpack-c](https://github.com/msgpack/msgpack-c) (c++) | 90%             | 1200%            |
+| `std::vector<double>`                                        | [Glaze](https://github.com/stephenberry/glaze) vs [msgpack-c](https://github.com/msgpack/msgpack-c) (c++) | 1200%           | 4860%            |
 
 [Performance test code](https://github.com/stephenberry/binary_performance)
 
