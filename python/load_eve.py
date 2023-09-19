@@ -1,7 +1,7 @@
 import json
 import numpy as np
 
-def load_eve(filename):
+def load_beve(filename):
     def read_value(fid):
         header = np.fromfile(fid, dtype=np.uint8, count=1)
         type_val = np.bitwise_and(header, 0b00000111)[0]
@@ -178,9 +178,9 @@ def convert_numpy_arrays_to_lists(obj):
         return [convert_numpy_arrays_to_lists(item) for item in obj]
     return obj
 
-# Load .eve file
-filename = "output.eve"
-data = load_eve(filename)
+# Load .beve file
+filename = "output.beve"
+data = load_beve(filename)
 
 # Convert NumPy arrays within the data to lists
 data = convert_numpy_arrays_to_lists(data)
