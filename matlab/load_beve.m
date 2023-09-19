@@ -1,4 +1,4 @@
-% Load a .eve file
+% Load a .beve file
 % Reference: https://github.com/stephenberry/eve
 function data = load_eve(filename)
     fid = fopen(filename, 'rb');
