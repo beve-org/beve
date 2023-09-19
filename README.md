@@ -23,10 +23,10 @@ The following table lists the performance increase between EVE with [Glaze](http
 
 | Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Read (% Faster) | Write (% Faster) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------------- | ---------------- |
-| [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 90%             | 1190%            |
-| `std::vector<double>`                                        | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 1300%           | 4900%            |
-| `std::vector<float>`                                         | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 2800%           | 7000%            |
-| `std::vector<uint16_t>`                                      | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 7200%           | 16600%           |
+| [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 90%             | 1200%            |
+| double array                                                 | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 1300%           | 4900%            |
+| float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 2800%           | 7000%            |
+| uint16_t array                                               | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 7200%           | 16600%           |
 
 [Performance test code](https://github.com/stephenberry/binary_performance)
 
@@ -37,9 +37,9 @@ The table below shows binary message size versus EVE. A larger value means the b
 | Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Message Size |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
 | [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | -4%          |
-| `std::vector<double>`                                        | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +12%         |
-| `std::vector<float>`                                         | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +25%         |
-| `std::vector<uint16_t>`                                      | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +50%         |
+| double array                                                 | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +12%         |
+| float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +25%         |
+| uint16_t array                                               | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +50%         |
 
 ## Why Tagged Messages?
 
