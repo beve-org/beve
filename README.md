@@ -25,7 +25,7 @@ The following table lists the performance increase between EVE with [Glaze](http
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------------- | ---------------- |
 | [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 90%             | 1200%            |
 | double array                                                 | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 1300%           | 4900%            |
-| float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 2800%           | 7000%            |
+| float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 2800%           | 8000%            |
 | uint16_t array                                               | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 7200%           | 16600%           |
 
 [Performance test code](https://github.com/stephenberry/binary_performance)
