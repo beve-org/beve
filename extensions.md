@@ -11,7 +11,7 @@ Following the first three HEADER bits, the next five bits denote various extensi
 
 ## 0 - Data Delimiter
 
-Used to separate chunks of data to match a specifications like [NDJSON](http://ndjson.org).
+Used to separate chunks of data to match specifications like [NDJSON](http://ndjson.org).
 
 ## 1 - Type Tag (Variants)
 
