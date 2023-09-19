@@ -63,12 +63,12 @@ The standard extension for BEVE files is `.beve`
 
 ### Matlab
 
-- [load_eve.m](https://github.com/stephenberry/eve/blob/main/matlab/load_eve.m) (this repository)
+- [load_beve.m](https://github.com/stephenberry/eve/blob/main/matlab/load_beve.m) (this repository)
   - Work in progress
 
 ### Python
 
-- [load_eve.py](https://github.com/stephenberry/eve/blob/main/python/load_eve.py) (this repository)
+- [load_beve.py](https://github.com/stephenberry/eve/blob/main/python/load_beve.py) (this repository)
   - Work in progress
 
 ## Right Most Bit Ordering
