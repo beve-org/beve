@@ -136,6 +136,8 @@ Wherever `DATA` is used, it denotes bytes of data without a `HEADER`.
 
 Wherever `VALUE` is used, it denotes a binary structure that begins with a `HEADER`.
 
+Wherever `SIZE` is used, it refers to a compressed unsigned integer that denotes a count of array members, object members, or string characters.
+
 ## 0 - Null
 
 Null is simply `0`
