@@ -85,7 +85,7 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 
 > Wherever all caps `SIZE` is used in the specification, it refers to a size indicator that uses a compressed unsigned integer.
 >
-> `SIZE` refers to the count of array members, object members, or characters in a string. It does **not** refer to the number of raw bytes.
+> `SIZE` refers to the count of array members, object members, or bytes in a string. It does **not** refer to the number of raw bytes except for UTF-8 strings.
 
 | #    | Number of Bytes | Integer Value (N)                |
 | ---- | --------------- | -------------------------------- |
@@ -136,7 +136,7 @@ Wherever `DATA` is used, it denotes bytes of data without a `HEADER`.
 
 Wherever `VALUE` is used, it denotes a binary structure that begins with a `HEADER`.
 
-Wherever `SIZE` is used, it refers to a compressed unsigned integer that denotes a count of array members, object members, or string characters.
+Wherever `SIZE` is used, it refers to a compressed unsigned integer that denotes a count of array members, object members, or bytes in a string.
 
 ## 0 - Null
 
