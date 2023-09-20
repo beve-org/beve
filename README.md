@@ -84,6 +84,8 @@ Note that BEVE is not a compression algorithm. It uses some bit packing to be mo
 A compressed unsigned integer uses the first two bits to denote the number of bytes used to express an integer. The rest of the bits indicate the integer value.
 
 > Wherever all caps `SIZE` is used in the specification, it refers to a size indicator that uses a compressed unsigned integer.
+>
+> `SIZE` refers to the count of array members, object members, or characters in a string. It does **not** refer to the number of raw bytes.
 
 | #    | Number of Bytes | Integer Value (N)                |
 | ---- | --------------- | -------------------------------- |
