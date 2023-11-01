@@ -1,4 +1,4 @@
-# EVE Extensions
+# BEVE Extensions
 
 Following the first three HEADER bits, the next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specialized use cases, such as variants, matrices, and complex numbers.
 
@@ -67,4 +67,4 @@ The next two bits denote the numerical type:
 2 -> unsigned integer    0b000'10'000
 ```
 
-The next three bits are used to indicate the BYTE COUNT. This is the same specification for EVE numbers.
+The next three bits are used to indicate the BYTE COUNT. This is the same specification for BEVE numbers.
