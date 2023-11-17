@@ -92,9 +92,9 @@ function data = read_value(fid)
             byte_count_index = bitshift(bitand(header, 0b11100000), -5);
             byte_count = config(byte_count_index + 1);
 
-            size = read_compressed(fid);
+            N = read_compressed(fid);
 
-            for i = 1:size
+            for ii = 1:N
                 if is_string
                     string_size = read_compressed(fid);
                     string = fread(fid, string_size, 'char=>char', 'l');
@@ -117,43 +117,48 @@ function data = read_value(fid)
             byte_count_index = bitshift(bitand(header, 0b11100000), -5);
             byte_count = config(byte_count_index + 1);
 
-            % Read the size of the array
-            size = read_compressed(fid);
+            % Read the N of the array
+            N = read_compressed(fid);
 
             if is_float
                 switch byte_count
                     case 4
-                        data = fread(fid, size, '*float32', 'l');
+                        data = fread(fid, N, '*float32', 'l');
                     case 8
-                        data = fread(fid, size, '*float64', 'l');
+                        data = fread(fid, N, '*float64', 'l');
                 end
             else
                 if is_signed
                     switch byte_count
                         case 1
-                            data = fread(fid, size, '*int8', 'l');
+                            data = fread(fid, N, '*int8', 'l');
                         case 2
-                            data = fread(fid, size, '*int16', 'l');
+                            data = fread(fid, N, '*int16', 'l');
                         case 4
-                            data = fread(fid, size, '*int32', 'l');
+                            data = fread(fid, N, '*int32', 'l');
                         case 8
-                            data = fread(fid, size, '*int64', 'l');
+                            data = fread(fid, N, '*int64', 'l');
                     end
                 else
                     switch byte_count
                         case 1
-                            data = fread(fid, size, '*uint8', 'l');
+                            data = fread(fid, N, '*uint8', 'l');
                         case 2
-                            data = fread(fid, size, '*uint16', 'l');
+                            data = fread(fid, N, '*uint16', 'l');
                         case 4
-                            data = fread(fid, size, '*uint32', 'l');
+                            data = fread(fid, N, '*uint32', 'l');
                         case 8
-                            data = fread(fid, size, '*uint64', 'l');
+                            data = fread(fid, N, '*uint64', 'l');
                     end
                 end
             end
         case 5 % untyped array
-            error('TODO: support untyped arrays');
+            N = read_compressed(fid);
+
+            data = cell(N, 1);
+            for ii = 1:N
+                data{ii} = read_value(fid);
+            end
         case 6 % extensions
             extension = bitshift(bitand(header, 0b11111000), -3);
             switch extension
@@ -232,40 +237,40 @@ function data = read_complex(fid)
                 end
             end
         case 1 % complex array
-            % Read the size of the array
-            size = read_compressed(fid);
+            % Read the N of the array
+            N = read_compressed(fid);
     
             if is_float
                 switch byte_count
                     case 4
-                        raw = fread(fid, [2, size], '*float32', 'l');
+                        raw = fread(fid, [2, N], '*float32', 'l');
                         data = complex(raw(1, :), raw(2, :));
                     case 8
-                        raw = fread(fid, [2, size], '*float64', 'l');
+                        raw = fread(fid, [2, N], '*float64', 'l');
                         data = complex(raw(1, :), raw(2, :));
                 end
             else
                 if is_signed
                     switch byte_count
                         case 1
-                            raw = fread(fid, [2, size], '*int8', 'l');
+                            raw = fread(fid, [2, N], '*int8', 'l');
                         case 2
-                            raw = fread(fid, [2, size], '*int16', 'l');
+                            raw = fread(fid, [2, N], '*int16', 'l');
                         case 4
-                            raw = fread(fid, [2, size], '*int32', 'l');
+                            raw = fread(fid, [2, N], '*int32', 'l');
                         case 8
-                            raw = fread(fid, [2, size], '*int64', 'l');
+                            raw = fread(fid, [2, N], '*int64', 'l');
                     end
                 else
                     switch byte_count
                         case 1
-                            raw = fread(fid, size, '*uint8', 'l');
+                            raw = fread(fid, N, '*uint8', 'l');
                         case 2
-                            raw = fread(fid, size, '*uint16', 'l');
+                            raw = fread(fid, N, '*uint16', 'l');
                         case 4
-                            raw = fread(fid, size, '*uint32', 'l');
+                            raw = fread(fid, N, '*uint32', 'l');
                         case 8
-                            raw = fread(fid, size, '*uint64', 'l');
+                            raw = fread(fid, N, '*uint64', 'l');
                     end
                 end
                 data = complex(raw(1, :), raw(2, :)); % remap to complex
@@ -273,7 +278,7 @@ function data = read_complex(fid)
     end
 end
 
-function size = read_compressed(fid)
+function N = read_compressed(fid)
     config = uint8([1, 2, 4, 8]);
 
     compressed = fread(fid, 1, '*uint8', 'l');
@@ -281,15 +286,15 @@ function size = read_compressed(fid)
     fseek(fid, -1, 'cof'); % 'cof' means current position
     switch n_size_bytes
         case 1
-            size = fread(fid, 1, '*uint8', 'l');
+            N = fread(fid, 1, '*uint8', 'l');
         case 2
-            size = fread(fid, 1, '*uint16', 'l');
+            N = fread(fid, 1, '*uint16', 'l');
         case 4
-            size = fread(fid, 1, '*uint32', 'l');
+            N = fread(fid, 1, '*uint32', 'l');
         case 8
-            size = fread(fid, 1, '*uint64', 'l');
+            N = fread(fid, 1, '*uint64', 'l');
         otherwise
-            error('Unsupported size');
+            error('Unsupported N');
     end
-    size = bitshift(size, -2);
+    N = bitshift(N, -2);
 end
