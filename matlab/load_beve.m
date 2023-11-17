@@ -26,7 +26,7 @@ function data = read_value(fid)
         case 0 % null or boolean
             is_bool = bitshift(bitand(header, 0b00001000), -3);
             if is_bool
-                data = logical(bitshift(bitand(header, 0b11110000), -4));
+                data = logical(bitshift(bitand(header, 0b11100000), -5));
             else
                 data = NaN;
             end
@@ -193,7 +193,8 @@ function data = read_complex(fid)
             is_signed = true;
     end
 
-    byte_count_index = bitshift(bitand(header, 0b11100000), -5);
+    byte_count_index = bitshift(bitand(complex_header, 0b11100000), -5);
+    config = uint8([1, 2, 4, 8]);
     byte_count = config(byte_count_index + 1);
 
     switch type
