@@ -26,7 +26,7 @@ function data = read_value(fid)
         case 0 % null or boolean
             is_bool = bitshift(bitand(header, 0b00001000), -3);
             if is_bool
-                data = logical(bitshift(bitand(header, 0b11100000), -5));
+                data = logical(bitshift(bitand(header, 0b11110000), -4));
             else
                 data = NaN;
             end
