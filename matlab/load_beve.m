@@ -1,6 +1,14 @@
 % Load a .beve file
 % Reference: https://github.com/stephenberry/beve
 function data = load_beve(filename)
+    % Open dialog box if filename isn't provided.
+    if ( ~exist('filename','var') || isempty(filename) )
+        [file,path] = uigetfile('*.beve',...
+            'Select a BEVE file to load.');
+        filename = fullfile(path,file);
+        fprintf("BEVE File Selected:\n'%s'\n",filename);
+    end
+
     fid = fopen(filename, 'rb');
     if fid == -1
         error('Failed to open file');
