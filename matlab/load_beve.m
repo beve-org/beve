@@ -106,8 +106,8 @@ function data = read_value(fid)
             for ii = 1:N
                 if is_string
                     string_size = read_compressed(fid);
-                    string = fread(fid, string_size, 'char=>char', 'l');
-                    data.(string) = read_value(fid);
+                    str = fread(fid, string_size, 'char=>char', 'l')';
+                    data.(str) = read_value(fid);
                 else
                     error('TODO: support integer keys');
                 end
