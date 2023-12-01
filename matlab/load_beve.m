@@ -85,7 +85,8 @@ function data = read_value(fid)
                 end
             end
         case 2 % string
-            error('TODO: support strings');
+            string_size = read_compressed(fid);
+            data = fread(fid, string_size, 'char=>char', 'l')';
         case 3 % object
             key_type = bitshift(bitand(header, 0b00011000), -3);
             is_string = false;
