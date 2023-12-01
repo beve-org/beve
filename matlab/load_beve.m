@@ -171,6 +171,9 @@ function data = read_value(fid)
         case 6 % extensions
             extension = bitshift(bitand(header, 0b11111000), -3);
             switch extension
+                case 1 % variants
+                    read_compressed(fid);
+                    data = read_value(fid);
                 case 2 % matrices
                     layout = bitand(fread(fid, 1, '*uint8', 'l'), 0b00000001);
                     switch layout
