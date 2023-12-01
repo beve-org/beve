@@ -106,8 +106,9 @@ function data = read_value(fid)
             for ii = 1:N
                 if is_string
                     string_size = read_compressed(fid);
-                    str = fread(fid, string_size, 'char=>char', 'l')';
-                    data.(str) = read_value(fid);
+                    string = fread(fid, string_size, 'char=>char', 'l')';
+                    legal_string = makeValidFieldName(string);
+                    data.(legal_string) = read_value(fid);
                 else
                     error('TODO: support integer keys');
                 end
@@ -309,4 +310,33 @@ function N = read_compressed(fid)
             error('Unsupported N');
     end
     N = bitshift(N, -2);
+end
+
+
+function validName = makeValidFieldName(fieldName)
+  
+     % Convert string to char array if necessary
+    if isstring(fieldName)
+        fieldName = char(fieldName);
+    end
+
+    % Transpose if is a column vector
+    if(size(fieldName,1) > 1 && size(fieldName,2) == 1)
+        fieldName = fieldName';
+    end
+
+
+    % Replace invalid characters with underscores
+    validName = regexprep(fieldName, '[^a-zA-Z0-9_]', '');
+    
+    % Ensure the name starts with a letter
+    if isempty(regexp(validName, '^[a-zA-Z]', 'once'))
+        validName = ['A', validName]; % Prepend 'A' if the name does not start with a letter
+    end
+
+    % Truncate if the name is too long
+    maxNameLength = namelengthmax();
+    if length(validName) > maxNameLength
+        validName = validName(1:maxNameLength);
+    end
 end
