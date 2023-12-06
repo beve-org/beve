@@ -166,7 +166,7 @@ The next three bits of the HEADER are used as the BYTE COUNT.
 > See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 
 ```c++
-bfloat16_t    0b001'00'000 // brain float
+bfloat16_t    0b000'00'001 // brain float
 float16_t     0b001'00'001
 float32_t     0b010'00'001 // float
 float64_t     0b011'00'001 // double
