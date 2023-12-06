@@ -60,7 +60,9 @@ The standard extension for BEVE files is `.beve`
 ### Matlab
 
 - [load_beve.m](https://github.com/stephenberry/eve/blob/main/matlab/load_beve.m) (this repository)
+- [write_beve.m](https://github.com/stephenberry/eve/blob/main/matlab/write_beve.m) (this repository)
   - Work in progress
+  
 
 ### Python
 
