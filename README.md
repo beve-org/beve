@@ -67,7 +67,6 @@ The standard extension for BEVE files is `.beve`
 ### Python
 
 - [load_beve.py](https://github.com/stephenberry/eve/blob/main/python/load_beve.py) (this repository)
-  - Work in progress
 
 ## Right Most Bit Ordering
 
