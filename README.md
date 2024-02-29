@@ -17,14 +17,14 @@ Version 1.0
 
 ## Performance vs MessagePack
 
-The following table lists the performance increase between BEVE with [Glaze](https://github.com/stephenberry/glaze) versus other libraries and their binary formats. A benchmark of Glaze versus itself would yield 0% performance benefit.
+The following table lists the performance increase between BEVE with [Glaze](https://github.com/stephenberry/glaze) versus other libraries and their binary formats.
 
-| Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Read (% Faster) | Write (% Faster) |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | --------------- | ---------------- |
-| [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 90%             | 1200%            |
-| double array                                                 | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 1300%           | 4900%            |
-| float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 2800%           | 8000%            |
-| uint16_t array                                               | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 7200%           | 16600%           |
+| Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Read (Times Faster) | Write (Times Faster) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------- | -------------------- |
+| [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 1.9X                | 13X                  |
+| double array                                                 | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 14X                 | 50X                  |
+| float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 29X                 | 81X                  |
+| uint16_t array                                               | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 73X                 | 167X                 |
 
 [Performance test code](https://github.com/stephenberry/binary_performance)
 
