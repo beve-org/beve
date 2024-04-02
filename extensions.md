@@ -13,13 +13,15 @@ Following the first three HEADER bits, the next five bits denote various extensi
 
 Used to separate chunks of data to match specifications like [NDJSON](http://ndjson.org).
 
+When converted to JSON this should add a new line (`'\n'`) character to the JSON.
+
 ## 1 - Type Tag (Variants)
 
 Expects a subsequent compressed unsigned integer to denote a type tag. A compressed SIZE indicator is used to efficiently store the tag.
 
 Layout : `HEADER | SIZE (i.e. type tag) | VALUE`
 
-When converted to JSON it is encouraged to use the following object layout:
+The converted JSON format should look like:
 
 ```json
 {
@@ -51,6 +53,16 @@ EXTENTS are written out as a typed array of unsigned integers.
 
 > The VALUE in the matrix must be a typed array of numerical data.
 
+The converted JSON format should look like:
+
+```json
+{
+  "layout": "layout_right",
+  "extents": [3, 3],
+  "value": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+}
+```
+
 ## 3 - Complex Numbers
 
 An additional COMPLEX HEADER byte is used.
@@ -81,3 +93,11 @@ The next two bits denote the numerical type:
 ```
 
 The next three bits are used to indicate the BYTE COUNT. This is the same specification for BEVE numbers.
+
+The converted JSON format should look like:
+
+```json
+[1, 2] // for a complex number
+[[1, 2], [2.0, 3]] // for a complex array
+```
+
