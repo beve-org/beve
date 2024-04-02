@@ -19,6 +19,19 @@ Expects a subsequent compressed unsigned integer to denote a type tag. A compres
 
 Layout : `HEADER | SIZE (i.e. type tag) | VALUE`
 
+When converted to JSON it is encouraged to use the following object layout:
+
+```json
+{
+  "index": 0,
+  "value": "the JSON value"
+}
+```
+
+The `"index"` should refer to an array of types, from zero to one less than the count of types.
+
+The `"value"` is any JSON value.
+
 ## 2 - Matrices
 
 Matrices can be stored as object or array types. However, this tag provides a more compact mechanism to introspect matrices.
