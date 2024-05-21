@@ -17,10 +17,20 @@ function loadFileToBuffer(filename) {
 try {
     const filename = './example.beve';
     const buffer = loadFileToBuffer(filename);
-    const data = beve.read_beve(buffer);
+    var data = beve.read_beve(buffer);
+    /*delete data['fixed_object'];
+    delete data['fixed_name_object'];
+    delete data['another_object']['string'];
+    delete data['another_object']['another_string'];
+    delete data['another_object']['boolean'];*/
     console.log(data);
+    console.log('--------------');
+    console.log('              ');
     //console.log(JSON.stringify(data));
     //write_beve(data, '../example/examplejs.beve');
+    const binary = beve.write_beve(data);
+    data = beve.read_beve(binary);
+    console.log(data);
 } catch (error) {
-    console.error('Error reading .beve file:', error);
+    console.error('Error:', error);
 }

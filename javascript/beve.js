@@ -349,7 +349,191 @@
         return read_value();
     }
 
+    class Writer {
+        constructor(size = 256) {
+            this.buffer = new Uint8Array(size);
+            this.offset = 0;
+        }
+    
+        ensureCapacity(size) {
+            if (this.offset + size > this.buffer.length) {
+                let newBuffer = new Uint8Array((this.buffer.length + size) * 2);
+                newBuffer.set(this.buffer);
+                this.buffer = newBuffer;
+            }
+        }
+
+        append_uint8(value) {
+            if (Number.isInteger(value) && value >= 0 && value <= 255) {
+                this.ensureCapacity(1);
+                this.buffer[this.offset] = value;
+                this.offset += 1;
+            } else {
+                throw new Error('Value must be an integer between 0 and 255');
+            }
+        }
+
+        append_uint16(value) {
+            if (Number.isInteger(value) && value >= 0 && value <= 65535) {
+                // 16-bit unsigned integer
+                this.ensureCapacity(2);
+                let view = new DataView(this.buffer.buffer);
+                view.setUint16(this.offset, value, true); // little-endian
+                this.offset += 2;
+            } else {
+                throw new Error('Value must be an integer between 0 and 65535');
+            }
+        }
+
+        append_uint32(value) {
+            if (Number.isInteger(value) && value >= 0 && value <= 4294967295) {
+                // 32-bit unsigned integer
+                this.ensureCapacity(4);
+                let view = new DataView(this.buffer.buffer);
+                view.setUint32(this.offset, value, true); // little-endian
+                this.offset += 4;
+            } else {
+                throw new Error('Value must be an integer between 0 and 4294967295');
+            }
+        }
+    
+        append_uint64(value) {
+            if (Number.isInteger(value) && value >= 0 && value <= 18446744073709551615) {
+                // 64-bit unsigned integer
+                this.ensureCapacity(8);
+                let high = Math.floor(value / 0x100000000);
+                let low = value % 0x100000000;
+                let view = new DataView(this.buffer.buffer);
+                view.setUint32(this.offset, low, true); // little-endian
+                view.setUint32(this.offset + 4, high, true); // little-endian
+                this.offset += 8;
+            } else {
+                throw new Error('Value must be an integer between 0 and 18446744073709551615');
+            }
+        }
+    
+        append(value) {
+            if (Array.isArray(value)) {
+                // Iterate over each element in the array and append
+                for (const element of value) {
+                    this.append(element);
+                }
+            } else if (typeof value === 'string') {
+                // Convert string to UTF-8 byte sequence
+                const encoder = new TextEncoder();
+                const bytes = encoder.encode(value);
+                const length = bytes.length;
+    
+                // Ensure capacity for the string bytes
+                this.ensureCapacity(length);
+    
+                // Append bytes to the buffer
+                this.buffer.set(bytes, this.offset);
+                this.offset += length;
+
+                // Debugging:
+                //const stringFromUint8Array = String.fromCharCode.apply(null, this.buffer);
+                //console.log(stringFromUint8Array);
+            } else if (Number.isInteger(value) && value >= -0x80000000 && value <= 0x7FFFFFFF) {
+                // 32-bit signed integer
+                this.ensureCapacity(4);
+                let view = new DataView(this.buffer.buffer);
+                view.setInt32(this.offset, value, true); // little-endian
+                this.offset += 4;
+            } else if (typeof value === 'number') {
+                // 64-bit floating-point number (double)
+                this.ensureCapacity(8);
+                let view = new DataView(this.buffer.buffer);
+                view.setFloat64(this.offset, value, true); // little-endian
+                this.offset += 8;
+            } else {
+                throw new Error('Unsupported value type');
+            }
+        }
+    }
+
+    function write_beve(data) {
+        const writer = new Writer();
+        write_value(writer, data);
+        return writer.buffer;
+    }
+    
+    function write_value(writer, value) {
+        if (Array.isArray(value) && value.length > 1 && typeof value[0] === 'number') {
+            let header = 4;
+            if (typeof value[0] === 'number' && !Number.isInteger(value[0])) {
+                header |= 0b01100000; // float64_t (double)
+            } else {
+                header |= 0b01001000; // int32_t (int)
+            }
+            writer.append_uint8(header);
+            writeCompressed(writer, value.length);
+            writer.append(value);
+        } else if (typeof value === 'boolean') {
+            let header = 0;
+            if (value) {
+                header |= 0b00011000;
+            } else {
+                header |= 0b00001000;
+            }
+            writer.append_uint8(header);
+        } else if (typeof value === 'number') {
+            let header = 1;
+            if (typeof value === 'number' && !Number.isInteger(value)) {
+                header |= 0b01100000; // float64_t (double)
+            } else {
+                header |= 0b01001000; // int32_t (int)
+            }
+            writer.append_uint8(header);
+            writer.append(value);
+        } else if (typeof value === 'string') {
+            let header = 2;
+            writer.append_uint8(header);
+            writeCompressed(writer, value.length);
+            writer.append(value);
+        } else if (Array.isArray(value)) {
+            let header = 5;
+            writer.append_uint8(header);
+            writeCompressed(writer, value.length);
+            for (let i = 0; i < value.length; i++) {
+                write_value(writer, value[i]);
+            }
+        } else if (typeof value === 'object' && Object.keys(value).length > 0) {
+            let header = 3;
+            let keyType = 0; // Assuming keys are always strings
+            let isSigned = false;
+            header |= keyType << 3;
+            header |= isSigned << 5;
+            writer.append_uint8(header);
+            writeCompressed(writer, Object.keys(value).length);
+            for (const key in value) {
+                writeCompressed(writer, key.length);
+                writer.append(key);
+                write_value(writer, value[key]);
+            }
+        } else {
+            throw new Error('Unsupported data type');
+        }
+    }
+    
+    function writeCompressed(writer, N) {
+        if (N < 64) {
+            const compressed = (N << 2) | 0;
+            writer.append_uint8(compressed);
+        } else if (N < 16384) {
+            const compressed = (N << 2) | 1;
+            writer.append_uint16(compressed);
+        } else if (N < 1073741824) {
+            const compressed = (N << 2) | 2;
+            writer.append_uint32(compressed);
+        } else if (N < 4611686018427387904) {
+            const compressed = (N << 2) | 3;
+            writer.append_uint64(BigInt(compressed));
+        }
+    }
+
     return {
-        read_beve: read_beve
+        read_beve: read_beve,
+        write_beve: write_beve
     };
 }));
