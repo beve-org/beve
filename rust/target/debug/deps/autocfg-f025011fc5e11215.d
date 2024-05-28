@@ -1,0 +1,10 @@
+/Users/mapletechnologies/go-workspace/src/github.com/meftunca/beve/rust/target/debug/deps/autocfg-f025011fc5e11215.rmeta: /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/lib.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/error.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/rustc.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/version.rs
+
+/Users/mapletechnologies/go-workspace/src/github.com/meftunca/beve/rust/target/debug/deps/libautocfg-f025011fc5e11215.rlib: /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/lib.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/error.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/rustc.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/version.rs
+
+/Users/mapletechnologies/go-workspace/src/github.com/meftunca/beve/rust/target/debug/deps/autocfg-f025011fc5e11215.d: /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/lib.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/error.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/rustc.rs /Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/version.rs
+
+/Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/lib.rs:
+/Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/error.rs:
+/Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/rustc.rs:
+/Users/mapletechnologies/.cargo/registry/src/index.crates.io-6f17d22bba15001f/autocfg-1.3.0/src/version.rs:
