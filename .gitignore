@@ -4,3 +4,10 @@
 *.cache
 *.vscode
 *.json
+
+# Added by cargo
+
+/target
+# RUST
+rust/target
+rust/Cargo.lock

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"os"
 )
 
 type Beve struct {
@@ -593,6 +594,38 @@ func writeCompressed(writer *Writer, N int) {
 		writer.appendUint64(big.NewInt(int64(compressed)))
 	}
 }
+
+func ReadFromBuffer(buffer []byte) (interface{}, error) {
+	beve := Beve{buffer: buffer, cursor: 0}
+	return beve.readValue()
+}
+
+func WriteToBuffer(data interface{}) ([]byte, error) {
+	writer := NewWriter(0)
+	err := writeValue(writer, data)
+	if err != nil {
+		return nil, err
+	}
+	return writer.buffer[:writer.offset], nil
+}
+
+func ReadFromFile(filename string) (interface{}, error) {
+	buffer, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return ReadFromBuffer(buffer)
+}
+
+func WriteToFile(filename string, data interface{}) error {
+	buffer, err := WriteToBuffer(data)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filename, buffer, 0644)
+}
+
+// TODO toJSON,fromJSON
 
 func main() {
 	// ... initialize the buffer
