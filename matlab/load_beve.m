@@ -13,7 +13,7 @@ function data = load_beve(filename)
     if fid == -1
         error('Failed to open file');
     end
-
+    
     data = read_value(fid);
 
     fclose(fid);
@@ -30,6 +30,7 @@ function data = read_value(fid)
 
     % Extract header components
     type = bitand(header, 0b00000111);
+    assert(~isempty(type), 'Type data empty');
     switch type
         case 0 % null or boolean
             is_bool = bitshift(bitand(header, 0b00001000), -3);
@@ -39,10 +40,10 @@ function data = read_value(fid)
                 data = NaN;
             end
         case 1 % number
-            num_type = bitshift(bitand(header, 0b00011000), -3);
+            element_type = bitshift(bitand(header, 0b00011000), -3);
             is_float = false;
             is_signed = false;
-            switch num_type
+            switch element_type
                 case 0
                     is_float = true;
                 case 1
@@ -89,17 +90,12 @@ function data = read_value(fid)
             data = fread(fid, string_size, 'char=>char', 'l')';
         case 3 % object
             key_type = bitshift(bitand(header, 0b00011000), -3);
-            is_string = false;
-            is_signed = false;
-            switch key_type
-                case 0
-                    is_string = true;
-                case 1
-                    is_signed = true;
+            [is_string, is_signed] = deal(key_type == 0, key_type == 1);
+
+            if (~is_string)
+                error('Non string object keys not implemented.');
             end
 
-            byte_count_index = bitshift(bitand(header, 0b11100000), -5);
-            byte_count = config(byte_count_index + 1);
 
             N = read_compressed(fid);
 
@@ -110,58 +106,85 @@ function data = read_value(fid)
                     legal_string = makeValidFieldName(string);
                     data.(legal_string) = read_value(fid);
                 else
-                    error('TODO: support integer keys');
+                    error('TODO: support integer object keys');
+                    % byte_count_index = bitshift(bitand(header, 0b11100000), -5);
+                    % byte_count = config(byte_count_index + 1);
                 end
             end
 
-        case 4 % typed array
-            num_type = bitshift(bitand(header, 0b00011000), -3);
-            is_float = false;
-            is_signed = false;
-            switch num_type
-                case 0
-                    is_float = true;
-                case 1
-                    is_signed = true;
+            if(N == 0)
+                data = []; % Odd to have an object with zero keys, but it is supported here.
+                empty_key = 'object';
+                try
+                    empty_key = evalin('caller','legal_string');
+                catch
+                end
+                warning("Zero object keys found for %s", empty_key);
             end
+
+        case 4 % typed array
+            element_type = bitshift(bitand(header, 0b00011000), -3);
+            [is_float, is_signed, is_bool_or_string] = ...
+                deal(element_type == 0, element_type == 1, element_type == 3);
+            is_numeric = not(is_bool_or_string);
+            string_flag = bitshift(bitand(header, 0b00100000), -5);
+            is_string = is_bool_or_string && string_flag;
+            is_bool = is_bool_or_string && not( string_flag );
+
+            %% Only used for numeric types
             byte_count_index = bitshift(bitand(header, 0b11100000), -5);
             byte_count = config(byte_count_index + 1);
 
             % Read the N of the array
             N = read_compressed(fid);
 
-            if is_float
-                switch byte_count
-                    case 4
-                        data = fread(fid, N, '*float32', 'l');
-                    case 8
-                        data = fread(fid, N, '*float64', 'l');
-                end
-            else
-                if is_signed
+            if is_numeric
+                if is_float
                     switch byte_count
-                        case 1
-                            data = fread(fid, N, '*int8', 'l');
-                        case 2
-                            data = fread(fid, N, '*int16', 'l');
                         case 4
-                            data = fread(fid, N, '*int32', 'l');
+                            data = fread(fid, N, '*float32', 'l');
                         case 8
-                            data = fread(fid, N, '*int64', 'l');
+                            data = fread(fid, N, '*float64', 'l');
                     end
                 else
-                    switch byte_count
-                        case 1
-                            data = fread(fid, N, '*uint8', 'l');
-                        case 2
-                            data = fread(fid, N, '*uint16', 'l');
-                        case 4
-                            data = fread(fid, N, '*uint32', 'l');
-                        case 8
-                            data = fread(fid, N, '*uint64', 'l');
+                    if is_signed
+                        switch byte_count
+                            case 1
+                                data = fread(fid, N, '*int8', 'l');
+                            case 2
+                                data = fread(fid, N, '*int16', 'l');
+                            case 4
+                                data = fread(fid, N, '*int32', 'l');
+                            case 8
+                                data = fread(fid, N, '*int64', 'l');
+                        end
+                    else
+                        switch byte_count
+                            case 1
+                                data = fread(fid, N, '*uint8', 'l');
+                            case 2
+                                data = fread(fid, N, '*uint16', 'l');
+                            case 4
+                                data = fread(fid, N, '*uint32', 'l');
+                            case 8
+                                data = fread(fid, N, '*uint64', 'l');
+                        end
                     end
                 end
+            elseif is_string
+                % Read an array of strings (or cell array of character vectors?)
+                % For each element... (there are N)
+                % Read the compressed size, then read that number of chars
+                data=strings(N,1); % Initialize string array
+                for ii=1:N
+                    string_size = read_compressed(fid);
+                    data{ii} = fread(fid, string_size, 'char=>char', 'l')';
+                end
+
+            elseif is_bool
+                error('Typed arrays of bools not implemented')
             end
+
         case 5 % untyped array
             N = read_compressed(fid);
 
@@ -314,6 +337,7 @@ end
 
 
 function validName = makeValidFieldName(fieldName)
+
   
      % Convert string to char array if necessary
     if isstring(fieldName)
