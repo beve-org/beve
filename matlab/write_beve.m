@@ -22,7 +22,17 @@ function write_beve(data, filename)
 end
 
 function write_value(fid, value)
-    if iscomplex(value)
+    if ischar(value)
+        % Handle string values
+        header = uint8(2);  % Type 2 = string
+        write_byte(fid, header);
+        
+        % Write string length
+        write_compressed(fid, length(value));
+        
+        % Write string content
+        fwrite(fid, value, 'char', 'l');
+    elseif isnumeric(value) && ~isreal(value)
         % Handle complex numbers
         header = uint8(6);  % Type 6 = extensions
         header = bitor(header, bitshift(3, 3));  % Extension 3 = complex numbers
@@ -111,16 +121,6 @@ function write_value(fid, value)
         else
             write_integer(fid, header, value, 0);
         end
-    elseif ischar(value)
-        % Handle string values
-        header = uint8(2);  % Type 2 = string
-        write_byte(fid, header);
-        
-        % Write string length
-        write_compressed(fid, length(value));
-        
-        % Write string content
-        fwrite(fid, value, 'char', 'l');
     elseif isstring(value) && length(value) == 1
         % Handle single MATLAB string (convert to char)
         write_value(fid, char(value));
