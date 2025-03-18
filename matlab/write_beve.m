@@ -340,13 +340,13 @@ function write_compressed(fid, N)
         compressed = bitor(bitshift(N, 2), uint8(0));
         fwrite(fid, compressed, 'uint8', 'l');
     elseif N < 16384
-        compressed = bitor(bitshift(N, 2), uint8(1));
+        compressed = bitor(bitshift(N, 2), uint16(1));
         fwrite(fid, compressed, 'uint16', 'l');
     elseif N < 1073741824
-        compressed = bitor(bitshift(N, 2), uint8(2));
+        compressed = bitor(bitshift(N, 2), uint32(2));
         fwrite(fid, compressed, 'uint32', 'l');
     else
-        compressed = bitor(bitshift(N, 2), uint8(3));
+        compressed = bitor(bitshift(N, 2), uint64(3));
         fwrite(fid, compressed, 'uint64', 'l');
     end
 end
