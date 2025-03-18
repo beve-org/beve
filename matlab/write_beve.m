@@ -194,46 +194,58 @@ function write_complex(fid, value)
     end
     
     % Write the complex values
+    % For performance:
+    % Reshape data into a real array with alernating real/imag parts
     if isa(real(value), 'single')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'float32', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'single');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'float32', 'l');
     elseif isa(real(value), 'double')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'float64', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'double');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'float64', 'l');
     elseif isa(real(value), 'int8')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'int8', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'int8');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'int8', 'l');
     elseif isa(real(value), 'int16')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'int16', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'int16');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'int16', 'l');
     elseif isa(real(value), 'int32')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'int32', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'int32');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'int32', 'l');
     elseif isa(real(value), 'int64')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'int64', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'int64');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'int64', 'l');
     elseif isa(real(value), 'uint8')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'uint8', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'uint8');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'uint8', 'l');
     elseif isa(real(value), 'uint16')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'uint16', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'uint16');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'uint16', 'l');
     elseif isa(real(value), 'uint32')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'uint32', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'uint32');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'uint32', 'l');
     elseif isa(real(value), 'uint64')
-        for i = 1:numel(value)
-            fwrite(fid, [real(value(i)); imag(value(i))], 'uint64', 'l');
-        end
+        flat_data = zeros(2*numel(value), 1, 'uint64');
+        flat_data(1:2:end) = real(value(:));
+        flat_data(2:2:end) = imag(value(:));
+        fwrite(fid, flat_data, 'uint64', 'l');
     end
 end
 
