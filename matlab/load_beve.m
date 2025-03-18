@@ -24,13 +24,13 @@ end
 function data = read_value(fid)
     % Read the header
     header = fread(fid, 1, '*uint8', 'l');
+    assert(~isempty(header), 'Unexpected end of data');
 
     % Configuration mapping
     config = uint8([1, 2, 4, 8]);
 
     % Extract header components
     type = bitand(header, 0b00000111);
-    assert(~isempty(type), 'Type data empty');
     switch type
         case 0 % null or boolean
             is_bool = bitshift(bitand(header, 0b00001000), -3);
@@ -90,36 +90,65 @@ function data = read_value(fid)
             data = fread(fid, string_size, 'char=>char', 'l')';
         case 3 % object
             key_type = bitshift(bitand(header, 0b00011000), -3);
-            [is_string, is_signed] = deal(key_type == 0, key_type == 1);
-
-            if (~is_string)
-                error('Non string object keys not implemented.');
-            end
-
+            is_string = (key_type == 0);
+            is_signed = (key_type == 1);
+            
+            % Get byte count for integer keys
+            byte_count_index = bitshift(bitand(header, 0b11100000), -5);
+            byte_count = config(byte_count_index + 1);
 
             N = read_compressed(fid);
-
-            for ii = 1:N
-                if is_string
-                    string_size = read_compressed(fid);
-                    string = fread(fid, string_size, 'char=>char', 'l')';
-                    legal_string = makeValidFieldName(string);
-                    data.(legal_string) = read_value(fid);
-                else
-                    error('TODO: support integer object keys');
-                    % byte_count_index = bitshift(bitand(header, 0b11100000), -5);
-                    % byte_count = config(byte_count_index + 1);
-                end
-            end
-
-            if(N == 0)
-                data = []; % Odd to have an object with zero keys, but it is supported here.
+            
+            % Initialize empty struct if there are fields
+            if N > 0
+                data = struct();
+            else
+                data = []; % Empty object
                 empty_key = 'object';
                 try
                     empty_key = evalin('caller','legal_string');
                 catch
                 end
                 warning("Zero object keys found for %s", empty_key);
+                return;
+            end
+
+            for ii = 1:N
+                if is_string
+                    % Read string key
+                    string_size = read_compressed(fid);
+                    string = fread(fid, string_size, 'char=>char', 'l')';
+                    legal_string = makeValidFieldName(string);
+                    data.(legal_string) = read_value(fid);
+                else
+                    % Handle integer keys (signed or unsigned)
+                    if is_signed
+                        switch byte_count
+                            case 1
+                                key = fread(fid, 1, '*int8', 'l');
+                            case 2
+                                key = fread(fid, 1, '*int16', 'l');
+                            case 4
+                                key = fread(fid, 1, '*int32', 'l');
+                            case 8
+                                key = fread(fid, 1, '*int64', 'l');
+                        end
+                    else % unsigned
+                        switch byte_count
+                            case 1
+                                key = fread(fid, 1, '*uint8', 'l');
+                            case 2
+                                key = fread(fid, 1, '*uint16', 'l');
+                            case 4
+                                key = fread(fid, 1, '*uint32', 'l');
+                            case 8
+                                key = fread(fid, 1, '*uint64', 'l');
+                        end
+                    end
+                    % Convert integer key to valid MATLAB field name
+                    key_str = sprintf('int_%d', key);
+                    data.(key_str) = read_value(fid);
+                end
             end
 
         case 4 % typed array
@@ -129,7 +158,7 @@ function data = read_value(fid)
             is_numeric = not(is_bool_or_string);
             string_flag = bitshift(bitand(header, 0b00100000), -5);
             is_string = is_bool_or_string && string_flag;
-            is_bool = is_bool_or_string && not( string_flag );
+            is_bool = is_bool_or_string && not(string_flag);
 
             %% Only used for numeric types
             byte_count_index = bitshift(bitand(header, 0b11100000), -5);
@@ -180,9 +209,18 @@ function data = read_value(fid)
                     string_size = read_compressed(fid);
                     data{ii} = fread(fid, string_size, 'char=>char', 'l')';
                 end
-
             elseif is_bool
-                error('Typed arrays of bools not implemented')
+                % Read packed boolean values (8 per byte)
+                num_bytes = ceil(N / 8);
+                packed_bytes = fread(fid, num_bytes, '*uint8', 'l');
+                
+                % Unpack the booleans from the bytes
+                data = false(N, 1);
+                for i = 1:N
+                    byte_index = floor((i-1) / 8) + 1;
+                    bit_position = mod(i-1, 8);
+                    data(i) = bitand(bitshift(packed_bytes(byte_index), -bit_position), 1) == 1;
+                end
             end
 
         case 5 % untyped array
@@ -200,12 +238,14 @@ function data = read_value(fid)
                     data = read_value(fid);
                 case 2 % matrices
                     layout = bitand(fread(fid, 1, '*uint8', 'l'), 0b00000001);
+                    extents = read_value(fid);
+                    matrix_data = read_value(fid);
+                    
                     switch layout
                         case 0 % row major
-                            error('TODO: add row major support');
+                            % For row-major, we need to reshape and transpose
+                            data = reshape(matrix_data, extents(2), extents(1))';
                         case 1 % column major
-                            extents = read_value(fid);
-                            matrix_data = read_value(fid);
                             data = reshape(matrix_data, extents(1), extents(2));
                         otherwise
                             error('Unsupported layout');
@@ -337,8 +377,6 @@ end
 
 
 function validName = makeValidFieldName(fieldName)
-
-  
      % Convert string to char array if necessary
     if isstring(fieldName)
         fieldName = char(fieldName);
@@ -348,7 +386,6 @@ function validName = makeValidFieldName(fieldName)
     if(size(fieldName,1) > 1 && size(fieldName,2) == 1)
         fieldName = fieldName';
     end
-
 
     % Replace invalid characters with underscores
     validName = regexprep(fieldName, '[^a-zA-Z0-9_]', '');

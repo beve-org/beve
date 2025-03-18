@@ -4,6 +4,8 @@
 #include "glaze/glaze_exceptions.hpp"
 #include <glaze/exceptions/binary_exceptions.hpp>
 
+#include <complex>
+
 static constexpr std::string_view json0 = R"(
 {
    "fixed_object": {
@@ -79,15 +81,35 @@ struct obj_t
    bool another_bool{};
 };
 
+void example()
+{
+    obj_t obj{};
+    glz::ex::read_json(obj, json0);
+    glz::ex::write_file_beve(obj, "output.beve", std::string{});
+
+    obj = {};
+    glz::ex::read_file_beve(obj, "output.beve", std::string{});
+
+    glz::ex::write_file_json(obj, "output.json", std::string{});
+}
+
+struct complex_object
+{
+    std::vector<std::complex<float>> complex_floats{ {1.0f, 0.5f}, {0.1f, 2.0f} };
+    std::vector<std::complex<int32_t>> complex_int32_t{ {-1, 5}, {7, -9} };
+};
+
+void complex_data()
+{
+    complex_object obj{};
+    std::string buffer{};
+    glz::ex::write_file_beve(obj, "complex.beve", buffer);
+    glz::ex::write_file_json(obj, "complex.json", buffer);
+};
+
 int main() {
-   obj_t obj{};
-   glz::ex::read_json(obj, json0);
-   glz::ex::write_file_binary(obj, "output.beve", std::string{});
-
-   obj = {};
-   glz::ex::read_file_binary(obj, "output.beve", std::string{});
-
-   glz::ex::write_file_json(obj, "output.json", std::string{});
+    example();
+    complex_data();
 
    return 0;
 }
