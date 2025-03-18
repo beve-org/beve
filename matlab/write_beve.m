@@ -32,6 +32,13 @@ function write_value(fid, value)
         
         % Write string content
         fwrite(fid, value, 'char', 'l');
+    elseif iscell(value)
+        header = uint8(5);
+        write_byte(fid, header);
+        write_compressed(fid, numel(value));
+        for ii = 1:numel(value)
+            write_value(fid, value{ii});
+        end
     elseif isnumeric(value) && ~isreal(value)
         % Handle complex numbers
         header = uint8(6);  % Type 6 = extensions
@@ -138,13 +145,6 @@ function write_value(fid, value)
             fwrite(fid, field_name, 'char', 'l');
             write_value(fid, value.(field_name));
         end
-    elseif iscell(value)
-        header = uint8(5);
-        write_byte(fid, header);
-        write_compressed(fid, numel(value));
-        for ii = 1:numel(value)
-            write_value(fid, value{ii});
-        end
     else
         error('Unsupported data type: %s', class(value));
     end
@@ -165,17 +165,17 @@ function write_complex(fid, value)
     
     % Determine byte count
     if isa(real(value), 'single')
-        byte_count_index = 1;  % 4 bytes
+        byte_count_index = 2;  % 4 bytes
     elseif isa(real(value), 'double')
-        byte_count_index = 2;  % 8 bytes
+        byte_count_index = 3;  % 8 bytes
     elseif isa(real(value), 'int8') || isa(real(value), 'uint8')
         byte_count_index = 0;  % 1 byte
     elseif isa(real(value), 'int16') || isa(real(value), 'uint16')
-        byte_count_index = 0;  % 2 bytes
+        byte_count_index = 1;  % 2 bytes
     elseif isa(real(value), 'int32') || isa(real(value), 'uint32')
-        byte_count_index = 1;  % 4 bytes
+        byte_count_index = 2;  % 4 bytes
     elseif isa(real(value), 'int64') || isa(real(value), 'uint64')
-        byte_count_index = 2;  % 8 bytes
+        byte_count_index = 3;  % 8 bytes
     else
         error('Unsupported complex number type: %s', class(real(value)));
     end
@@ -241,7 +241,7 @@ function write_float(fid, header, value, is_array)
     if isa(value, 'single')
         % Single precision (4 bytes)
         header = bitor(header, bitshift(0, 3));  % is_float = true
-        header = bitor(header, bitshift(1, 5));  % byte_count_index = 1 (4 bytes)
+        header = bitor(header, bitshift(2, 5));  % byte_count_index = 2 (4 bytes)
         write_byte(fid, header);
         if is_array
             write_compressed(fid, length(value));
@@ -250,7 +250,7 @@ function write_float(fid, header, value, is_array)
     elseif isa(value, 'double')
         % Double precision (8 bytes)
         header = bitor(header, bitshift(0, 3));  % is_float = true
-        header = bitor(header, bitshift(2, 5));  % byte_count_index = 2 (8 bytes)
+        header = bitor(header, bitshift(3, 5));  % byte_count_index = 3 (8 bytes)
         write_byte(fid, header);
         if is_array
             write_compressed(fid, length(value));
@@ -272,7 +272,7 @@ function write_integer(fid, header, value, is_array)
         fwrite(fid, value, 'uint8', 'l');
     elseif isa(value, 'uint16')
         header = bitor(header, bitshift(2, 3));  % is_unsigned = true
-        header = bitor(header, bitshift(0, 5));  % byte_count_index = 0 (2 bytes)
+        header = bitor(header, bitshift(1, 5));  % byte_count_index = 1 (2 bytes)
         write_byte(fid, header);
         if is_array
             write_compressed(fid, length(value));
@@ -280,7 +280,7 @@ function write_integer(fid, header, value, is_array)
         fwrite(fid, value, 'uint16', 'l');
     elseif isa(value, 'uint32')
         header = bitor(header, bitshift(2, 3));  % is_unsigned = true
-        header = bitor(header, bitshift(1, 5));  % byte_count_index = 1 (4 bytes)
+        header = bitor(header, bitshift(2, 5));  % byte_count_index = 2 (4 bytes)
         write_byte(fid, header);
         if is_array
             write_compressed(fid, length(value));
@@ -288,7 +288,7 @@ function write_integer(fid, header, value, is_array)
         fwrite(fid, value, 'uint32', 'l');
     elseif isa(value, 'uint64')
         header = bitor(header, bitshift(2, 3));  % is_unsigned = true
-        header = bitor(header, bitshift(2, 5));  % byte_count_index = 2 (8 bytes)
+        header = bitor(header, bitshift(3, 5));  % byte_count_index = 3 (8 bytes)
         write_byte(fid, header);
         if is_array
             write_compressed(fid, length(value));
@@ -304,7 +304,7 @@ function write_integer(fid, header, value, is_array)
         fwrite(fid, value, 'int8', 'l');
     elseif isa(value, 'int16')
         header = bitor(header, bitshift(1, 3));  % is_signed = true
-        header = bitor(header, bitshift(0, 5));  % byte_count_index = 0 (2 bytes)
+        header = bitor(header, bitshift(1, 5));  % byte_count_index = 1 (2 bytes)
         write_byte(fid, header);
         if is_array
             write_compressed(fid, length(value));
@@ -312,7 +312,7 @@ function write_integer(fid, header, value, is_array)
         fwrite(fid, value, 'int16', 'l');
     elseif isa(value, 'int32')
         header = bitor(header, bitshift(1, 3));  % is_signed = true
-        header = bitor(header, bitshift(1, 5));  % byte_count_index = 1 (4 bytes)
+        header = bitor(header, bitshift(2, 5));  % byte_count_index = 2 (4 bytes)
         write_byte(fid, header);
         if is_array
             write_compressed(fid, length(value));
@@ -320,7 +320,7 @@ function write_integer(fid, header, value, is_array)
         fwrite(fid, value, 'int32', 'l');
     elseif isa(value, 'int64')
         header = bitor(header, bitshift(1, 3));  % is_signed = true
-        header = bitor(header, bitshift(2, 5));  % byte_count_index = 2 (8 bytes)
+        header = bitor(header, bitshift(3, 5));  % byte_count_index = 3 (8 bytes)
         write_byte(fid, header);
         if is_array
             write_compressed(fid, length(value));
