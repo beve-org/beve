@@ -22,7 +22,11 @@ function write_beve(data, filename)
 end
 
 function write_value(fid, value)
-    if ischar(value)
+    if isnan(value) && isscalar(value)
+        % Handle null value (NaN in MATLAB)
+        header = uint8(0);  % Type 0 = null
+        write_byte(fid, header);
+    elseif ischar(value)
         % Handle string values
         header = uint8(2);  % Type 2 = string
         write_byte(fid, header);
@@ -62,17 +66,31 @@ function write_value(fid, value)
             fwrite(fid, str, 'char', 'l');
         end
     elseif islogical(value) && length(value) > 1
-        % Handle logical arrays
+        % Handle logical arrays - packed as bits (8 per byte)
         header = uint8(4);  % Type 4 = typed array
         header = bitor(header, bitshift(3, 3));  % element_type = 3 (bool_or_string)
-        header = bitor(header, bitshift(0, 5));  % string_flag = 0 (bool)
+        header = bitor(header, bitshift(0, 5));  % string_flag = 0 (boolean)
         write_byte(fid, header);
         
         % Write array size
         write_compressed(fid, numel(value));
         
-        % Write boolean values
-        fwrite(fid, value, 'uint8', 'l');
+        % Pack booleans into bits (8 per byte)
+        num_values = numel(value);
+        num_bytes = ceil(num_values / 8);
+        packed_bytes = zeros(num_bytes, 1, 'uint8');
+        
+        % Pack each boolean into the appropriate bit
+        for i = 1:num_values
+            byte_index = floor((i-1) / 8) + 1;
+            bit_position = mod(i-1, 8);
+            if value(i)
+                packed_bytes(byte_index) = bitor(packed_bytes(byte_index), bitshift(uint8(1), bit_position));
+            end
+        end
+        
+        % Write the packed bytes
+        fwrite(fid, packed_bytes, 'uint8', 'l');
     elseif isvector(value) && length(value) > 1
         if iscell(value) && all(cellfun(@ischar, value))
             % Handle cell array of strings as a string array
@@ -117,6 +135,9 @@ function write_value(fid, value)
     elseif isstring(value) && length(value) == 1
         % Handle single MATLAB string (convert to char)
         write_value(fid, char(value));
+    elseif isstruct(value) && isfield(value, 'tag') && isfield(value, 'value') && numel(fieldnames(value)) == 2
+        % Handle variant (Extension 1 - Type Tag)
+        write_variant(fid, value.tag, value.value);
     elseif isstruct(value)
         header = uint8(3);
         key_type = 0;  % Assuming keys are always strings
@@ -148,6 +169,19 @@ function write_value(fid, value)
     else
         error('Unsupported data type: %s', class(value));
     end
+end
+
+function write_variant(fid, tag, value)
+    % Write a variant (Extension 1 - Type Tag)
+    header = uint8(6);  % Type 6 = extensions
+    header = bitor(header, bitshift(1, 3));  % Extension 1 = type tag (variant)
+    write_byte(fid, header);
+    
+    % Write the type tag as a compressed unsigned integer
+    write_compressed(fid, tag);
+    
+    % Write the value
+    write_value(fid, value);
 end
 
 function write_complex(fid, value)
