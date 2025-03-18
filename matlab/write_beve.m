@@ -45,20 +45,6 @@ function write_value(fid, value)
         header = bitor(header, bitshift(3, 3));  % Extension 3 = complex numbers
         write_byte(fid, header);
         write_complex(fid, value);
-    elseif ismatrix(value) && ~isvector(value)
-        % Handle matrices
-        header = uint8(6);  % Type 6 = extensions
-        header = bitor(header, bitshift(2, 3));  % Extension 2 = matrices
-        write_byte(fid, header);
-        
-        % Write layout (column major = 1)
-        write_byte(fid, uint8(1));
-        
-        % Write dimensions
-        write_value(fid, uint32([size(value,1), size(value,2)]));
-        
-        % Write matrix data
-        write_value(fid, value(:));
     elseif isstring(value) && length(value) > 1
         % Handle string arrays
         header = uint8(4);  % Type 4 = typed array
@@ -145,6 +131,20 @@ function write_value(fid, value)
             fwrite(fid, field_name, 'char', 'l');
             write_value(fid, value.(field_name));
         end
+    elseif ismatrix(value) && ~isvector(value) && ~isstruct(value)
+        % Handle matrices
+        header = uint8(6);  % Type 6 = extensions
+        header = bitor(header, bitshift(2, 3));  % Extension 2 = matrices
+        write_byte(fid, header);
+        
+        % Write layout (column major = 1)
+        write_byte(fid, uint8(1));
+        
+        % Write dimensions
+        write_value(fid, uint32([size(value,1), size(value,2)]));
+        
+        % Write matrix data
+        write_value(fid, value(:));
     else
         error('Unsupported data type: %s', class(value));
     end
