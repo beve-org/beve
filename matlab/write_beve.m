@@ -22,7 +22,7 @@ function write_beve(data, filename)
 end
 
 function write_value(fid, value)
-    if isnan(value) && isscalar(value)
+    if isnumeric(value) && isscalar(value) && isnan(value)
         % Handle null value (NaN in MATLAB)
         header = uint8(0);  % Type 0 = null
         write_byte(fid, header);
