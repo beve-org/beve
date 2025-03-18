@@ -283,42 +283,32 @@ function data = read_complex(fid)
             if is_float
                 switch byte_count
                     case 4
-                        raw_data = fread(fid, 2, '*float32', 'l');
-                        data = complex(raw_data(1), raw_data(2));
+                        data = complex(fread(fid, 2, '*float32', 'l'));
                     case 8
-                        raw_data = fread(fid, 2, '*float64', 'l');
-                        data = complex(raw_data(1), raw_data(2));
+                        data = complex(fread(fid, 2, '*float64', 'l'));
                 end
             else
                 if is_signed
                     switch byte_count
                         case 1
-                            raw_data = fread(fid, 2, '*int8', 'l');
-                            data = complex(raw_data(1), raw_data(2));
+                            data = complex(fread(fid, 2, '*int8', 'l'));
                         case 2
-                            raw_data = fread(fid, 2, '*int16', 'l');
-                            data = complex(raw_data(1), raw_data(2));
+                            data = complex(fread(fid, 2, '*int16', 'l'));
                         case 4
-                            raw_data = fread(fid, 2, '*int32', 'l');
-                            data = complex(raw_data(1), raw_data(2));
+                            data = complex(fread(fid, 2, '*int32', 'l'));
                         case 8
-                            raw_data = fread(fid, 2, '*int64', 'l');
-                            data = complex(raw_data(1), raw_data(2));
+                            data = complex(fread(fid, 2, '*int64', 'l'));
                     end
                 else
                     switch byte_count
                         case 1
-                            raw_data = fread(fid, 2, '*uint8', 'l');
-                            data = complex(raw_data(1), raw_data(2));
+                            data = complex(fread(fid, 2, '*uint8', 'l'));
                         case 2
-                            raw_data = fread(fid, 2, '*uint16', 'l');
-                            data = complex(raw_data(1), raw_data(2));
+                            data = complex(fread(fid, 2, '*uint16', 'l'));
                         case 4
-                            raw_data = fread(fid, 2, '*uint32', 'l');
-                            data = complex(raw_data(1), raw_data(2));
+                            data = complex(fread(fid, 2, '*uint32', 'l'));
                         case 8
-                            raw_data = fread(fid, 2, '*uint64', 'l');
-                            data = complex(raw_data(1), raw_data(2));
+                            data = complex(fread(fid, 2, '*uint64', 'l'));
                     end
                 end
             end
@@ -329,54 +319,37 @@ function data = read_complex(fid)
             if is_float
                 switch byte_count
                     case 4
-                        % Read 2*N values (alternating real and imaginary)
-                        raw_data = fread(fid, 2*N, '*float32', 'l');
-                        % Extract real parts (odd indices in MATLAB: 1,3,5,...)
-                        real_parts = raw_data(1:2:end);
-                        % Extract imaginary parts (even indices in MATLAB: 2,4,6,...)
-                        imag_parts = raw_data(2:2:end);
-                        % Create complex array
-                        data = complex(real_parts, imag_parts);
+                        raw = fread(fid, [2, N], '*float32', 'l');
+                        data = complex(raw(1, :), raw(2, :));
                     case 8
-                        % Read 2*N values (alternating real and imaginary)
-                        raw_data = fread(fid, 2*N, '*float64', 'l');
-                        % Extract real parts (odd indices in MATLAB: 1,3,5,...)
-                        real_parts = raw_data(1:2:end);
-                        % Extract imaginary parts (even indices in MATLAB: 2,4,6,...)
-                        imag_parts = raw_data(2:2:end);
-                        % Create complex array
-                        data = complex(real_parts, imag_parts);
+                        raw = fread(fid, [2, N], '*float64', 'l');
+                        data = complex(raw(1, :), raw(2, :));
                 end
             else
                 if is_signed
                     switch byte_count
                         case 1
-                            raw_data = fread(fid, 2*N, '*int8', 'l');
+                            raw = fread(fid, [2, N], '*int8', 'l');
                         case 2
-                            raw_data = fread(fid, 2*N, '*int16', 'l');
+                            raw = fread(fid, [2, N], '*int16', 'l');
                         case 4
-                            raw_data = fread(fid, 2*N, '*int32', 'l');
+                            raw = fread(fid, [2, N], '*int32', 'l');
                         case 8
-                            raw_data = fread(fid, 2*N, '*int64', 'l');
+                            raw = fread(fid, [2, N], '*int64', 'l');
                     end
                 else
                     switch byte_count
                         case 1
-                            raw_data = fread(fid, 2*N, '*uint8', 'l');
+                            raw = fread(fid, N, '*uint8', 'l');
                         case 2
-                            raw_data = fread(fid, 2*N, '*uint16', 'l');
+                            raw = fread(fid, N, '*uint16', 'l');
                         case 4
-                            raw_data = fread(fid, 2*N, '*uint32', 'l');
+                            raw = fread(fid, N, '*uint32', 'l');
                         case 8
-                            raw_data = fread(fid, 2*N, '*uint64', 'l');
+                            raw = fread(fid, N, '*uint64', 'l');
                     end
                 end
-                % Extract real parts (odd indices in MATLAB: 1,3,5,...)
-                real_parts = raw_data(1:2:end);
-                % Extract imaginary parts (even indices in MATLAB: 2,4,6,...)
-                imag_parts = raw_data(2:2:end);
-                % Create complex array
-                data = complex(real_parts, imag_parts);
+                data = complex(raw(1, :), raw(2, :)); % remap to complex
             end
     end
 end
