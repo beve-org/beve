@@ -91,6 +91,34 @@ function write_value(fid, value)
         
         % Write the packed bytes
         fwrite(fid, packed_bytes, 'uint8', 'l');
+    elseif isnumeric(value) && isempty(value)
+        % Handle empty numeric arrays - this is the fix for empty arrays
+        header = uint8(4);  % Type 4 = typed array
+        
+        % Determine element type
+        if isfloat(value)
+            header = bitor(header, bitshift(0, 3));  % element_type = 0 (float)
+        elseif any(strcmp(class(value), {'int8', 'int16', 'int32', 'int64'}))
+            header = bitor(header, bitshift(1, 3));  % element_type = 1 (signed)
+        else
+            header = bitor(header, bitshift(2, 3));  % element_type = 2 (unsigned)
+        end
+        
+        % Determine byte count
+        if isa(value, 'single') || isa(value, 'int32') || isa(value, 'uint32')
+            header = bitor(header, bitshift(2, 5));  % byte_count_index = 2 (4 bytes)
+        elseif isa(value, 'double') || isa(value, 'int64') || isa(value, 'uint64')
+            header = bitor(header, bitshift(3, 5));  % byte_count_index = 3 (8 bytes)
+        elseif isa(value, 'int16') || isa(value, 'uint16')
+            header = bitor(header, bitshift(1, 5));  % byte_count_index = 1 (2 bytes)
+        else  % int8 or uint8
+            header = bitor(header, bitshift(0, 5));  % byte_count_index = 0 (1 byte)
+        end
+        
+        write_byte(fid, header);
+        
+        % Write array size (0 for empty array)
+        write_compressed(fid, 0);
     elseif isvector(value) && length(value) > 1
         if iscell(value) && all(cellfun(@ischar, value))
             % Handle cell array of strings as a string array
