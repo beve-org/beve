@@ -5,6 +5,10 @@
 *.vscode
 *.json
 
+# Allow .beve and .json files in data
+!data/**/*.json
+!data/**/*.beve
+
 # Added by cargo
 
 /target

@@ -82,10 +82,10 @@ struct obj_t
 int main() {
    obj_t obj{};
    glz::ex::read_json(obj, json0);
-   glz::ex::write_file_binary(obj, "output.beve", std::string{});
+   glz::ex::write_file_beve(obj, "output.beve", std::string{});
 
    obj = {};
-   glz::ex::read_file_binary(obj, "output.beve", std::string{});
+   glz::ex::read_file_beve(obj, "output.beve", std::string{});
 
    glz::ex::write_file_json(obj, "output.json", std::string{});
 
