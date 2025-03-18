@@ -24,13 +24,13 @@ end
 function data = read_value(fid)
     % Read the header
     header = fread(fid, 1, '*uint8', 'l');
+    assert(~isempty(header), 'Unexpected end of data');
 
     % Configuration mapping
     config = uint8([1, 2, 4, 8]);
 
     % Extract header components
     type = bitand(header, 0b00000111);
-    assert(~isempty(type), 'Type data empty');
     switch type
         case 0 % null or boolean
             is_bool = bitshift(bitand(header, 0b00001000), -3);
