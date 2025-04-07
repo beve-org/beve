@@ -1,15 +1,30 @@
 % Load a .beve file
 % Reference: https://github.com/stephenberry/beve
-function data = load_beve(filename)
-    % Open dialog box if filename isn't provided.
-    if ( ~exist('filename','var') || isempty(filename) )
-        [file,path] = uigetfile('*.beve',...
-            'Select a BEVE file to load.');
-        filename = fullfile(path,file);
-        fprintf("BEVE File Selected:\n'%s'\n",filename);
+% Given Path to file: Load
+% Given Path to folder: Open load dialog box in folder
+% Given no arguments: Open load dialog box in working directory
+function data = load_beve(path)
+
+    isPathDirectory = false;
+    defaultFolder = ''; % present working directory
+    isPathGiven = exist('path','var') && ~isempty(path);
+    if(isPathGiven)
+        %isPathFile = isfile(path);
+        isPathDirectory = isfolder(path);
+        if(isPathDirectory)
+            defaultFolder = path;
+        end
     end
 
-    fid = fopen(filename, 'rb');
+    % Open Dialog Box
+    if ( ~isPathGiven || isPathDirectory )
+        [file,path] = uigetfile(fullfile(defaultFolder,'*.beve'),...
+            'Select a BEVE file to load.');
+        path = fullfile(path,file);
+        fprintf("BEVE File Selected:\n'%s'\n",path);
+    end
+
+    fid = fopen(path, 'rb');
     if fid == -1
         error('Failed to open file');
     end
