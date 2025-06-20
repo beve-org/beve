@@ -61,12 +61,14 @@ The standard extension for BEVE files is `.beve`
 
 - [load_beve.m](https://github.com/stephenberry/eve/blob/main/matlab/load_beve.m) (this repository)
 - [write_beve.m](https://github.com/stephenberry/eve/blob/main/matlab/write_beve.m) (this repository)
-  - Work in progress
-  
 
 ### Python
 
 - [load_beve.py](https://github.com/stephenberry/eve/blob/main/python/load_beve.py) (this repository)
+
+### Rust
+
+- [serde-beve crate](https://crates.io/crates/serde-beve)
 
 ## Right Most Bit Ordering
 
