@@ -49,7 +49,7 @@ The first bit of the matrix header denotes the data layout of the matrix.
 
 Layout: `HEADER | MATRIX HEADER | EXTENTS | VALUE`
 
-EXTENTS are written out as a typed array of unsigned integers.
+EXTENTS are written out as a typed array of integers.
 
 > The VALUE in the matrix must be a typed array of numerical data.
 
