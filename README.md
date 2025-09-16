@@ -244,7 +244,21 @@ Layout: `HEADER | SIZE | data`
 
 ### Boolean Arrays
 
-Boolean arrays are stored using single bits for booleans and packed to the nearest byte.
+Boolean arrays are stored as single bits and packed into consecutive bytes.
+
+- `SIZE` is the number of booleans; the payload length is `ceil(SIZE / 8)` bytes.
+- Bits are packed per byte in LSB-first order. Within each byte, bit 0 (the least-significant bit) corresponds to the lowest array index for that byte; bit `i` corresponds to array index `byte_index * 8 + i`.
+- Bytes are written in order: the first byte packs indices 0–7, the second 8–15, and so on.
+- A bit value of 1 encodes `true`; 0 encodes `false`.
+- If `SIZE` is not a multiple of 8, the remaining high bits of the final byte are padding and must be zero.
+
+Examples
+
+```text
+0b00000001  -> index 0 is true (indices 1–7 are false)
+0b00000010  -> index 1 is true
+[true, false, true] -> 0b00000101
+```
 
 ### String Arrays
 
