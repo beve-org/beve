@@ -233,7 +233,7 @@
                                         throw new Error('Unsupported layout');
                                 }
                             case 3: // complex numbers
-                                return read_complex();
+                                return read_complex_ext();
                             default:
                                 throw new Error('Unsupported extension');
                         }
@@ -332,10 +332,49 @@
             }
         }
 
-        function read_complex() {
-            const real = read_value();
-            const imag = read_value();
-            return { real, imag };
+        function read_complex_ext() {
+            // COMPLEX HEADER
+            const ch = buffer[cursor++];
+            const kind = ch & 0b00000111; // 0: single complex, 1: complex array
+            const num_type = (ch & 0b00011000) >> 3; // 0 float, 1 signed, 2 unsigned
+            const bc_idx = (ch & 0b11100000) >> 5;  // byte count index
+            const bc_map = [1, 2, 4, 8];
+            const byte_count = bc_map[bc_idx];
+
+            function read_num() {
+                if (num_type === 0) {
+                    if (byte_count === 4) return readFloat();
+                    if (byte_count === 8) return readDouble();
+                } else if (num_type === 1) {
+                    if (byte_count === 1) return readInt8();
+                    if (byte_count === 2) return readInt16();
+                    if (byte_count === 4) return readInt32();
+                    if (byte_count === 8) return readBigInt64();
+                } else if (num_type === 2) {
+                    if (byte_count === 1) return readUInt8();
+                    if (byte_count === 2) return readUInt16();
+                    if (byte_count === 4) return readUInt32();
+                    if (byte_count === 8) return readBigUInt64();
+                }
+                throw new Error('Unsupported complex number type');
+            }
+
+            if (kind === 0) {
+                // Single complex: real, imag
+                const real = read_num();
+                const imag = read_num();
+                return [real, imag];
+            } else if (kind === 1) {
+                // Complex array: SIZE, then real[N], imag[N]
+                const N = read_compressed();
+                const re = new Array(N);
+                const im = new Array(N);
+                for (let i = 0; i < N; ++i) re[i] = read_num();
+                for (let i = 0; i < N; ++i) im[i] = read_num();
+                return [re, im];
+            } else {
+                throw new Error('Unsupported complex kind');
+            }
         }
 
         function reshape(array, rows, cols) {

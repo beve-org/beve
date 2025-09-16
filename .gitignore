@@ -5,9 +5,9 @@
 *.vscode
 *.json
 
-# Allow .beve and .json files in data
-!data/**/*.json
-!data/**/*.beve
+# Allow .beve and .json files in examples
+!examples/*.json
+!examples/*.beve
 
 # Added by cargo
 

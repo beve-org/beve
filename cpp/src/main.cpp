@@ -5,6 +5,9 @@
 #include <glaze/exceptions/binary_exceptions.hpp>
 
 #include <complex>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 static constexpr std::string_view json0 = R"(
 {
@@ -81,16 +84,15 @@ struct obj_t
    bool another_bool{};
 };
 
-void example()
+void example_general_object()
 {
     obj_t obj{};
     glz::ex::read_json(obj, json0);
-    glz::ex::write_file_beve(obj, "output.beve", std::string{});
+    glz::ex::write_file_beve(obj, "examples/general_object.beve", std::string{});
 
     obj = {};
-    glz::ex::read_file_beve(obj, "output.beve", std::string{});
-
-    glz::ex::write_file_json(obj, "output.json", std::string{});
+    glz::ex::read_file_beve(obj, "examples/general_object.beve", std::string{});
+    glz::ex::write_file_json(obj, "examples/general_object.json", std::string{});
 }
 
 struct complex_object
@@ -99,17 +101,54 @@ struct complex_object
     std::vector<std::complex<int32_t>> complex_int32_t{ {-1, 5}, {7, -9} };
 };
 
-void complex_data()
+void complex_numbers()
 {
     complex_object obj{};
     std::string buffer{};
-    glz::ex::write_file_beve(obj, "complex.beve", buffer);
-    glz::ex::write_file_json(obj, "complex.json", buffer);
+    glz::ex::write_file_beve(obj, "examples/complex_numbers.beve", buffer);
+    glz::ex::write_file_json(obj, "examples/complex_numbers.json", buffer);
 };
 
+struct float_array_t { std::vector<float> values; };
+struct double_array_t { std::vector<double> values; };
+struct uint16_array_t { std::vector<std::uint16_t> values; };
+struct strings_array_t { std::vector<std::string> values; };
+struct nested_t { std::string name; std::vector<double> coords; };
+struct nested_object_t2 { int id; nested_t nested; };
+
+void arrays_and_nested()
+{
+    {
+        float_array_t obj{ .values = {0.1f, 0.2f, 0.3f, 1.5f} };
+        glz::ex::write_file_beve(obj, "examples/float32_array.beve", std::string{});
+        glz::ex::write_file_json(obj, "examples/float32_array.json", std::string{});
+    }
+    {
+        double_array_t obj{ .values = {3.14159, 2.71828, 1.41421} };
+        glz::ex::write_file_beve(obj, "examples/float64_array.beve", std::string{});
+        glz::ex::write_file_json(obj, "examples/float64_array.json", std::string{});
+    }
+    {
+        uint16_array_t obj{ .values = {0, 1, 2, 1024, 65535} };
+        glz::ex::write_file_beve(obj, "examples/uint16_array.beve", std::string{});
+        glz::ex::write_file_json(obj, "examples/uint16_array.json", std::string{});
+    }
+    {
+        strings_array_t obj{ .values = {"cat", "dog", "elephant"} };
+        glz::ex::write_file_beve(obj, "examples/strings_array.beve", std::string{});
+        glz::ex::write_file_json(obj, "examples/strings_array.json", std::string{});
+    }
+    {
+        nested_object_t2 obj{ .id = 42, .nested = nested_t{ .name = "sensor-A", .coords = {1.0, 2.5, -3.75} } };
+        glz::ex::write_file_beve(obj, "examples/nested_object.beve", std::string{});
+        glz::ex::write_file_json(obj, "examples/nested_object.json", std::string{});
+    }
+}
+
 int main() {
-    example();
-    complex_data();
+    example_general_object();
+    complex_numbers();
+    arrays_and_nested();
 
    return 0;
 }
