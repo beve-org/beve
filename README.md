@@ -68,6 +68,8 @@ The standard extension for BEVE files is `.beve`
 
 ### Rust
 
+- [beve crate](https://crates.io/crates/beve) (developed by author)
+
 - [serde-beve crate](https://crates.io/crates/serde-beve)
 
 ## Right Most Bit Ordering
