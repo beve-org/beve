@@ -51,6 +51,8 @@ The endianness must be `little endian`.
 
 The standard extension for BEVE files is `.beve`
 
+The official media type for BEVE payloads is `application/beve`. Producers SHOULD advertise `Content-Type: application/beve` when emitting BEVE binaries, and consumers SHOULD express support via `Accept: application/beve`. This mirrors the role of `application/json` for JSON, with the distinction that the payload is encoded using the BEVE specification.
+
 ## Implementations
 
 ### C++
