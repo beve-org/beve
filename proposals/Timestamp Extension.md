@@ -44,7 +44,7 @@ All multi-byte integers in this extension are **little endian**.
 ```
 bits 0..1  SHAPE
            0 = single timestamp
-           1 = timestamp array
+           1 = timestamp array (exactly length 2)
            2..3 = reserved
 
 bits 2..4  UNIT (decimal powers around seconds)
@@ -93,10 +93,12 @@ NUMBER (unsigned) PRECISION
 
 ```
 EXT(4) | TIME_HEADER | [TZ:int16]? |
+ARRAY(len=2) |
 TYPED_ARRAY (signed int)   SECONDS_OFFSET[] |
 TYPED_ARRAY (unsigned int) PRECISION[]
 ```
 
+- The BEVE array header MUST report **length = 2** (seconds array first, precision array second).
 - Both typed arrays MUST have the **same SIZE** and are written **back-to-back**.
 - Each typed array uses standard BEVE typed-array headers (the header selects signed/unsigned and byte-count).
 
