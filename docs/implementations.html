@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BEVE implementations across different programming languages">
+    <title>Implementations - BEVE</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">BEVE</a>
+            <ul class="nav-menu">
+                <li><a href="index.html#overview">Overview</a></li>
+                <li><a href="index.html#performance">Performance</a></li>
+                <li><a href="index.html#specification">Specification</a></li>
+                <li><a href="implementations.html">Implementations</a></li>
+                <li><a href="proposals.html">Proposals</a></li>
+                <li><a href="https://github.com/beve-org/beve" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Implementations</h1>
+            <p class="tagline">BEVE libraries and tools across different programming languages</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="languages">
+            <h2>Available Implementations</h2>
+
+            <h3>C++</h3>
+            <p><a href="https://github.com/stephenberry/glaze" target="_blank"><strong>Glaze</strong></a> — Production-ready library with unified JSON/BEVE API. SIMD-optimized, header-only, C++20. <a href="https://github.com/stephenberry/glaze" target="_blank">GitHub →</a></p>
+
+            <h3>Rust</h3>
+            <p><a href="https://crates.io/crates/beve" target="_blank"><strong>beve</strong></a> — Official implementation with zero-copy deserialization and Serde support. <a href="https://crates.io/crates/beve" target="_blank">crates.io →</a></p>
+            <p><a href="https://crates.io/crates/serde-beve" target="_blank"><strong>serde-beve</strong></a> — Serde integration for seamless use with Serde-compatible types. <a href="https://crates.io/crates/serde-beve" target="_blank">crates.io →</a></p>
+
+            <h3>Python</h3>
+            <p><a href="https://github.com/beve-org/beve/tree/main/python" target="_blank"><strong>load_beve.py</strong></a> — Pure Python reference implementation, no dependencies. <a href="https://github.com/beve-org/beve/tree/main/python" target="_blank">GitHub →</a></p>
+
+            <h3>MATLAB</h3>
+            <p><a href="https://github.com/beve-org/beve/tree/main/matlab" target="_blank"><strong>load_beve.m / write_beve.m</strong></a> — Native MATLAB functions for reading and writing BEVE files. <a href="https://github.com/beve-org/beve/tree/main/matlab" target="_blank">GitHub →</a></p>
+
+            <h3>JavaScript / Go</h3>
+            <p>Implementations in development. <a href="https://github.com/beve-org/beve" target="_blank">Check the repository →</a></p>
+        </section>
+
+        <section id="resources">
+            <h2>Resources</h2>
+            <p><strong>Examples:</strong> <a href="https://github.com/beve-org/beve/tree/main/examples" target="_blank">Working code examples</a> and sample data files in the repository.</p>
+            <p><strong>Contributing:</strong> Follow the <a href="index.html#specification">specification</a>, include tests, and submit to <a href="https://github.com/beve-org/beve/discussions" target="_blank">GitHub discussions</a>.</p>
+        </section>
+
+        <section id="performance-notes">
+            <h2>Performance Considerations</h2>
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <h3>Use SIMD Where Possible</h3>
+                    <p>BEVE is designed for SIMD operations. Take advantage of vector instructions for array processing.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-copy"></i>
+                    </div>
+                    <h3>Zero-Copy Parsing</h3>
+                    <p>Implement zero-copy techniques when deserializing typed arrays for maximum performance.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-arrows-left-right"></i>
+                    </div>
+                    <h3>Little Endian</h3>
+                    <p>Leverage native byte order on x86/ARM for fast integer operations.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-file-zipper"></i>
+                    </div>
+                    <h3>Compression Integration</h3>
+                    <p>Consider integrating with LZ4, Zstandard, or Brotli for additional space savings.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 BEVE. Licensed under the <a href="https://github.com/beve-org/beve/blob/main/LICENSE" target="_blank">MIT License</a>.</p>
+            <p>
+                <a href="https://github.com/beve-org/beve" target="_blank">GitHub</a> |
+                <a href="https://github.com/beve-org/beve/discussions" target="_blank">Discussions</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BEVE - Binary Efficient Versatile Encoding. High performance tagged binary data specification designed for scientific computing and modern hardware.">
+    <title>BEVE - Binary Efficient Versatile Encoding</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">BEVE</a>
+            <ul class="nav-menu">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#performance">Performance</a></li>
+                <li><a href="#specification">Specification</a></li>
+                <li><a href="implementations.html">Implementations</a></li>
+                <li><a href="proposals.html">Proposals</a></li>
+                <li><a href="https://github.com/beve-org/beve" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>BEVE</h1>
+            <p class="subtitle">Binary Efficient Versatile Encoding</p>
+            <p class="version">Version 1.0</p>
+            <p class="tagline">High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.</p>
+            <div class="cta-buttons">
+                <a href="#specification" class="btn btn-primary">Read Specification</a>
+                <a href="https://github.com/beve-org/beve" class="btn btn-secondary" target="_blank">View on GitHub</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="overview">
+            <h2>Overview</h2>
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-code"></i>
+                    </div>
+                    <h3>Maps to and from JSON</h3>
+                    <p>Full JSON compatibility for easy integration</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-tag"></i>
+                    </div>
+                    <h3>Schema-less &amp; Fully Described</h3>
+                    <p>Like JSON, can be used in documents without schemas</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h3>Little Endian</h3>
+                    <p>Maximum performance on modern CPUs</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-rocket"></i>
+                    </div>
+                    <h3>Extremely Fast</h3>
+                    <p>Designed for SIMD operations</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h3>Future Proof</h3>
+                    <p>Supports 128-bit integers and larger types</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-flask"></i>
+                    </div>
+                    <h3>Scientific Computing</h3>
+                    <p>Brain floats, matrices, and complex numbers</p>
+                </div>
+            </div>
+            <div class="note">
+                <p><strong>Note:</strong> BEVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for typed arrays.</p>
+            </div>
+        </section>
+
+        <section id="performance">
+            <h2>Performance vs MessagePack</h2>
+            <p>The following table lists the performance increase between BEVE with <a href="https://github.com/stephenberry/glaze" target="_blank">Glaze</a> versus other libraries and their binary formats.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test</th>
+                            <th>Libraries (vs Glaze)</th>
+                            <th>Read (Times Faster)</th>
+                            <th>Write (Times Faster)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="https://github.com/stephenberry/json_performance" target="_blank">Test Object</a></td>
+                            <td><a href="https://github.com/msgpack/msgpack-c" target="_blank">msgpack-c</a> (c++)</td>
+                            <td class="perf-number">1.9X</td>
+                            <td class="perf-number">13X</td>
+                        </tr>
+                        <tr>
+                            <td>double array</td>
+                            <td><a href="https://github.com/msgpack/msgpack-c" target="_blank">msgpack-c</a> (c++)</td>
+                            <td class="perf-number">14X</td>
+                            <td class="perf-number">50X</td>
+                        </tr>
+                        <tr>
+                            <td>float array</td>
+                            <td><a href="https://github.com/msgpack/msgpack-c" target="_blank">msgpack-c</a> (c++)</td>
+                            <td class="perf-number">29X</td>
+                            <td class="perf-number">81X</td>
+                        </tr>
+                        <tr>
+                            <td>uint16_t array</td>
+                            <td><a href="https://github.com/msgpack/msgpack-c" target="_blank">msgpack-c</a> (c++)</td>
+                            <td class="perf-number">73X</td>
+                            <td class="perf-number">167X</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p><a href="https://github.com/stephenberry/binary_performance" target="_blank">Performance test code</a></p>
+
+            <h3>Binary Message Size Comparison</h3>
+            <p>The table below shows binary message size versus BEVE. A positive value means the binary produced is larger than BEVE.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test</th>
+                            <th>Libraries (vs Glaze)</th>
+                            <th>Message Size</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="https://github.com/stephenberry/json_performance" target="_blank">Test Object</a></td>
+                            <td><a href="https://github.com/msgpack/msgpack-c" target="_blank">msgpack-c</a> (c++)</td>
+                            <td class="size-number positive">-3.4%</td>
+                        </tr>
+                        <tr>
+                            <td>double array</td>
+                            <td><a href="https://github.com/msgpack/msgpack-c" target="_blank">msgpack-c</a> (c++)</td>
+                            <td class="size-number negative">+12%</td>
+                        </tr>
+                        <tr>
+                            <td>float array</td>
+                            <td><a href="https://github.com/msgpack/msgpack-c" target="_blank">msgpack-c</a> (c++)</td>
+                            <td class="size-number negative">+25%</td>
+                        </tr>
+                        <tr>
+                            <td>uint16_t array</td>
+                            <td><a href="https://github.com/msgpack/msgpack-c" target="_blank">msgpack-c</a> (c++)</td>
+                            <td class="size-number negative">+50%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="specification">
+            <h2>Technical Specification</h2>
+
+            <h3>File Extension</h3>
+            <p>The standard extension for BEVE files is <code>.beve</code></p>
+
+            <h3>MIME Type</h3>
+            <p>The official media type for BEVE payloads is <code>application/beve</code>. Producers SHOULD advertise <code>Content-Type: application/beve</code> when emitting BEVE binaries, and consumers SHOULD express support via <code>Accept: application/beve</code>. This mirrors the role of <code>application/json</code> for JSON, with the distinction that the payload is encoded using the BEVE specification.</p>
+
+            <h3>Endianness</h3>
+            <p>The endianness must be <strong>little endian</strong>.</p>
+
+            <h3>Why Tagged Messages?</h3>
+            <p><em>Flexibility and efficiency</em></p>
+            <p>JSON is ubiquitous because it is tagged (has keys), and therefore messages can be sent in part. Furthermore, extending specifications and adding more fields is far easier with tagged messages and unordered mapping. Tags also make the format more human friendly. However, tags are entirely optional, and structs can be serialized as generic arrays.</p>
+
+            <h3>Concerning Compression</h3>
+            <p>Note that BEVE is not a compression algorithm. It uses some bit packing to be more space efficient, but strings and numerical values see no compression. This means that BEVE binary is very compressible, like JSON, and it is encouraged to use compression algorithms like <a href="https://lz4.org" target="_blank">LZ4</a>, <a href="https://github.com/facebook/zstd" target="_blank">Zstandard</a>, <a href="https://github.com/google/brotli" target="_blank">Brotli</a>, etc. where size is critical.</p>
+
+            <h3>Compressed Unsigned Integer</h3>
+            <p>A compressed unsigned integer uses the first two bits to denote the number of bytes used to express an integer. The rest of the bits indicate the integer value.</p>
+            <div class="note">
+                <p>Wherever all caps <code>SIZE</code> is used in the specification, it refers to a size indicator that uses a compressed unsigned integer.</p>
+                <p><code>SIZE</code> refers to the count of array members, object members, or bytes in a string. It does <strong>not</strong> refer to the number of raw bytes except for UTF-8 strings.</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Number of Bytes</th>
+                            <th>Integer Value (N)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>N &lt; 64 [2^6]</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>N &lt; 16384 [2^14]</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>4</td>
+                            <td>N &lt; 1073741824 [2^30]</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>8</td>
+                            <td>N &lt; 4611686018427387904 [2^62]</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Byte Count Indicator</h3>
+            <p>Wherever all caps <code>BYTE COUNT</code> is used, it describes this mapping:</p>
+            <pre><code class="language-cpp">#      Number of bytes
+0      1
+1      2
+2      4
+3      8
+4      16
+5      32
+6      64
+7      128
+...</code></pre>
+
+            <h3>Header</h3>
+            <p>Every <code>VALUE</code> begins with a byte header. Any unspecified bits must be set to zero.</p>
+            <div class="note">
+                <p>Wherever all caps <code>HEADER</code> is used, it describes this header.</p>
+            </div>
+            <p>The first three bits denote types:</p>
+            <pre><code class="language-cpp">0 -&gt; null or boolean                          0b00000'000
+1 -&gt; number                                   0b00000'001
+2 -&gt; string                                   0b00000'010
+3 -&gt; object                                   0b00000'011
+4 -&gt; typed array                              0b00000'100
+5 -&gt; generic array                            0b00000'101
+6 -&gt; extension                                0b00000'110
+7 -&gt; reserved                                 0b00000'111</code></pre>
+
+            <h3>Nomenclature</h3>
+            <ul>
+                <li><code>DATA</code> denotes bytes of data without a <code>HEADER</code></li>
+                <li><code>VALUE</code> denotes a binary structure that begins with a <code>HEADER</code></li>
+                <li><code>SIZE</code> refers to a compressed unsigned integer that denotes a count of array members, object members, or bytes in a string</li>
+            </ul>
+
+            <h3>Type Specifications</h3>
+
+            <h4>0 - Null</h4>
+            <p>Null is simply <code>0</code></p>
+
+            <h4>0 - Boolean</h4>
+            <p>The next bit is set to indicate a boolean. The 5th bit is set to denote true or false.</p>
+            <pre><code class="language-cpp">false      0b000'01'000
+true       0b000'11'000</code></pre>
+
+            <h4>1 - Number</h4>
+            <p>The next two bits of the HEADER indicates whether the number is floating point, signed integer, or unsigned integer.</p>
+            <p>Float point types must conform to the IEEE-754 standard.</p>
+            <pre><code class="language-cpp">0 -&gt; floating point      0b000'00'001
+1 -&gt; signed integer      0b000'01'001
+2 -&gt; unsigned integer    0b000'10'001</code></pre>
+
+            <p>The next three bits of the HEADER are used as the BYTE COUNT.</p>
+            <div class="note">
+                <p><strong>Note:</strong> brain floats use a byte count indicator of 1, even though they use 2 bytes per value. This is used because float8_t is not supported and not typically useful.</p>
+            </div>
+
+            <h5>Floating Point Types</h5>
+            <pre><code class="language-cpp">bfloat16_t    0b000'00'001 // brain float
+float16_t     0b001'00'001
+float32_t     0b010'00'001 // float
+float64_t     0b011'00'001 // double
+float128_t    0b100'00'001</code></pre>
+
+            <h5>Signed Integer Types</h5>
+            <pre><code class="language-cpp">int8_t        0b000'01'001
+int16_t       0b001'01'001
+int32_t       0b010'01'001
+int64_t       0b011'01'001
+int128_t      0b100'01'001</code></pre>
+
+            <h5>Unsigned Integer Types</h5>
+            <pre><code class="language-cpp">uint8_t       0b000'10'001
+uint16_t      0b001'10'001
+uint32_t      0b010'10'001
+uint64_t      0b011'10'001
+uint128_t     0b100'10'001</code></pre>
+
+            <h4>2 - Strings</h4>
+            <p>Strings must be encoded with UTF-8.</p>
+            <p>Layout: <code>HEADER | SIZE | DATA</code></p>
+
+            <h5>Strings as Object Keys or Typed String Arrays</h5>
+            <p>When strings are used as keys in objects or typed string arrays the HEADER is not included.</p>
+            <p>Layout: <code>SIZE | DATA</code></p>
+
+            <h4>3 - Object</h4>
+            <p>The next two bits of the HEADER indicates the type of key.</p>
+            <pre><code class="language-cpp">0 -&gt; string
+1 -&gt; signed integer
+2 -&gt; unsigned integer</code></pre>
+            <p>For integer keys the next three bits of the HEADER indicate the BYTE COUNT.</p>
+            <div class="note">
+                <p>An object <code>KEY</code> must not contain a HEADER as the type of the key has already been defined.</p>
+            </div>
+            <p>Layout: <code>HEADER | SIZE | KEY[0] | VALUE[0] | ... KEY[N] | VALUE[N]</code></p>
+
+            <h4>4 - Typed Array</h4>
+            <p>The next two bits indicate the type stored in the array:</p>
+            <pre><code class="language-cpp">0 -&gt; floating point
+1 -&gt; signed integer
+2 -&gt; unsigned integer
+3 -&gt; boolean or string</code></pre>
+            <p>For integral and floating point types, the next three bits of the type header are the BYTE COUNT.</p>
+            <p>For boolean or string types the next bit indicates whether the type is a boolean or a string:</p>
+            <pre><code class="language-cpp">0 -&gt; boolean // packed as single bits to the nearest byte
+1 -&gt; string // an array of strings (not an array of characters)</code></pre>
+            <p>Layout: <code>HEADER | SIZE | data</code></p>
+
+            <h5>Boolean Arrays</h5>
+            <p>Boolean arrays are stored as single bits and packed into consecutive bytes.</p>
+            <ul>
+                <li><code>SIZE</code> is the number of booleans; the payload length is <code>ceil(SIZE / 8)</code> bytes.</li>
+                <li>Bits are packed per byte in LSB-first order. Within each byte, bit 0 (the least-significant bit) corresponds to the lowest array index for that byte; bit <code>i</code> corresponds to array index <code>byte_index * 8 + i</code>.</li>
+                <li>Bytes are written in order: the first byte packs indices 0–7, the second 8–15, and so on.</li>
+                <li>A bit value of 1 encodes <code>true</code>; 0 encodes <code>false</code>.</li>
+                <li>If <code>SIZE</code> is not a multiple of 8, the remaining high bits of the final byte are padding and must be zero.</li>
+            </ul>
+            <p><strong>Examples:</strong></p>
+            <pre><code class="language-text">0b00000001  -&gt; index 0 is true (indices 1–7 are false)
+0b00000010  -&gt; index 1 is true
+[true, false, true] -&gt; 0b00000101</code></pre>
+
+            <h5>String Arrays</h5>
+            <p>String arrays do not include the string HEADER for each element.</p>
+            <p>Layout: <code>HEADER | SIZE | string[0] | ... string[N]</code></p>
+
+            <h4>5 - Generic Array</h4>
+            <p>Generic arrays expect elements to have headers.</p>
+            <p>Layout: <code>HEADER | SIZE | VALUE[0] | ... VALUE[N]</code></p>
+
+            <h3>6 - Extensions</h3>
+            <p>Extensions are considered to be a formal part of the BEVE specification, but are not expected to be as broadly implemented.</p>
+            <p>Following the first three HEADER bits, the next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specialized use cases, such as variants, matrices, and complex numbers.</p>
+            <pre><code class="language-cpp">0 -&gt; data delimiter // for specs like Newline Delimited JSON
+1 -&gt; type tag // for variant like structures
+2 -&gt; matrices
+3 -&gt; complex numbers</code></pre>
+
+            <h4>0 - Data Delimiter</h4>
+            <p>Used to separate chunks of data to match specifications like <a href="http://ndjson.org" target="_blank">NDJSON</a>.</p>
+            <p>When converted to JSON this should add a new line (<code>'\n'</code>) character to the JSON.</p>
+
+            <h4>1 - Type Tag (Variants)</h4>
+            <p>Expects a subsequent compressed unsigned integer to denote a type tag. A compressed SIZE indicator is used to efficiently store the tag.</p>
+            <p>Layout: <code>HEADER | SIZE (i.e. type tag) | VALUE</code></p>
+            <p>The converted JSON format should look like:</p>
+            <pre><code class="language-json">{
+  "index": 0,
+  "value": "the JSON value"
+}</code></pre>
+            <p>The <code>"index"</code> should refer to an array of types, from zero to one less than the count of types.</p>
+            <p>The <code>"value"</code> is any JSON value.</p>
+
+            <h4>2 - Matrices</h4>
+            <p>Matrices can be stored as object or array types. However, this tag provides a more compact mechanism to introspect matrices.</p>
+            <p>Matrices add a one byte MATRIX HEADER.</p>
+            <p>The first bit of the matrix header denotes the data layout of the matrix.</p>
+            <pre><code class="language-cpp">0 -&gt; layout_right // row-major
+1 -&gt; layout_left // column-major</code></pre>
+            <p>Layout: <code>HEADER | MATRIX HEADER | EXTENTS | VALUE</code></p>
+            <p>EXTENTS are written out as a typed array of integers.</p>
+            <div class="note">
+                <p>The VALUE in the matrix must be a typed array of numerical data.</p>
+            </div>
+            <p>The converted JSON format should look like:</p>
+            <pre><code class="language-json">{
+  "layout": "layout_right",
+  "extents": [3, 3],
+  "value": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+}</code></pre>
+
+            <h4>3 - Complex Numbers</h4>
+            <p>An additional COMPLEX HEADER byte is used.</p>
+            <ul>
+                <li>Complex numbers are stored as pairs of numerical types.</li>
+            </ul>
+            <p>The first three bits denote whether this is a single complex number or a complex array.</p>
+            <pre><code class="language-cpp">0 -&gt; complex number
+1 -&gt; complex array</code></pre>
+            <p>For a single complex number the layout is: <code>HEADER | COMPLEX HEADER | DATA</code></p>
+            <div class="note">
+                <p>A complex value is a pair of numbers.</p>
+            </div>
+            <p>For a complex array the layout is: <code>HEADER | COMPLEX HEADER | SIZE | DATA</code></p>
+            <div class="note">
+                <p>Three bits are used to align the left bits with the layouts for numbers.</p>
+            </div>
+            <p>The next two bits denote the numerical type:</p>
+            <pre><code class="language-cpp">0 -&gt; floating point      0b000'00'000
+1 -&gt; signed integer      0b000'01'000
+2 -&gt; unsigned integer    0b000'10'000</code></pre>
+            <p>The next three bits are used to indicate the BYTE COUNT. This is the same specification for BEVE numbers.</p>
+            <p>The converted JSON format should look like:</p>
+            <pre><code class="language-json">[1, 2] // for a complex number
+[[1, 2], [2.0, 3]] // for a complex array</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 BEVE. Licensed under the <a href="https://github.com/beve-org/beve/blob/main/LICENSE" target="_blank">MIT License</a>.</p>
+            <p>
+                <a href="https://github.com/beve-org/beve" target="_blank">GitHub</a> |
+                <a href="https://github.com/beve-org/beve/discussions" target="_blank">Discussions</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>hljs.highlightAll();</script>
+</body>
+</html>
