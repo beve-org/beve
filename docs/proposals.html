@@ -14,6 +14,9 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="nav-logo">BEVE</a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu">
+                <span class="hamburger"></span>
+            </button>
             <ul class="nav-menu">
                 <li><a href="index.html#overview">Overview</a></li>
                 <li><a href="index.html#performance">Performance</a></li>
@@ -24,6 +27,18 @@
             </ul>
         </div>
     </nav>
+    <script>
+        document.querySelector('.nav-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-menu').classList.toggle('nav-open');
+            this.classList.toggle('nav-open');
+        });
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.querySelector('.nav-menu').classList.remove('nav-open');
+                document.querySelector('.nav-toggle').classList.remove('nav-open');
+            });
+        });
+    </script>
 
     <header class="hero">
         <div class="container">

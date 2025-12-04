@@ -501,8 +501,107 @@ footer a:hover {
     color: var(--accent-color);
 }
 
+/* ===== Hamburger Menu Button ===== */
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 101;
+}
+
+.hamburger {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: var(--text-color);
+    position: relative;
+    transition: background-color 0.3s;
+}
+
+.hamburger::before,
+.hamburger::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background-color: var(--text-color);
+    left: 0;
+    transition: transform 0.3s, top 0.3s;
+}
+
+.hamburger::before {
+    top: -7px;
+}
+
+.hamburger::after {
+    top: 7px;
+}
+
+/* Hamburger animation when open */
+.nav-toggle.nav-open .hamburger {
+    background-color: transparent;
+}
+
+.nav-toggle.nav-open .hamburger::before {
+    top: 0;
+    transform: rotate(45deg);
+}
+
+.nav-toggle.nav-open .hamburger::after {
+    top: 0;
+    transform: rotate(-45deg);
+}
+
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 280px;
+        height: 100vh;
+        background-color: var(--bg-secondary);
+        flex-direction: column;
+        align-items: stretch;
+        padding: 5rem 1.5rem 2rem;
+        gap: 0.5rem;
+        transition: right 0.3s ease;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+        border-left: 1px solid var(--border-color);
+        overflow-y: auto;
+    }
+
+    .nav-menu.nav-open {
+        right: 0;
+    }
+
+    .nav-menu li {
+        width: 100%;
+    }
+
+    .nav-menu a {
+        display: block;
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        border-radius: 0.5rem;
+    }
+
+    .nav-menu li:last-child a {
+        margin-top: 0.5rem;
+        text-align: center;
+    }
+
+    .nav-container {
+        padding: 0 1rem;
+        height: 60px;
+    }
+
     .hero {
         min-height: 400px;
         padding: 2rem 0;
@@ -518,28 +617,7 @@ footer a:hover {
 
     .hero .tagline {
         font-size: 1rem;
-    }
-
-    .nav-menu {
-        gap: 0.25rem;
-        font-size: 0.8125rem;
-    }
-
-    .nav-menu a {
-        padding: 0.5rem 0.75rem;
-    }
-
-    .nav-menu li:last-child a {
-        padding: 0.5rem 1rem;
-    }
-
-    .nav-logo {
-        font-size: 1.5rem;
-    }
-
-    .nav-container {
         padding: 0 1rem;
-        height: 60px;
     }
 
     .container {
@@ -570,27 +648,35 @@ footer a:hover {
         padding: 0.75rem 2rem;
         font-size: 1rem;
     }
+
+    .nav-logo {
+        font-size: 1.5rem;
+    }
 }
 
 @media (max-width: 480px) {
-    .nav-menu {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: center;
+    .hero {
+        min-height: auto;
+        padding: 3rem 0;
     }
 
-    .hero {
-        min-height: 500px;
-        padding: 2rem 0;
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .hero .subtitle {
+        font-size: 1.125rem;
     }
 
     .cta-buttons {
         flex-direction: column;
         align-items: stretch;
         gap: 0.75rem;
+        padding: 0 1rem;
     }
 
     .btn {
         width: 100%;
+        text-align: center;
     }
 }
