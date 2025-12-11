@@ -321,21 +321,26 @@ function read_compressed(fid) {
         case 0:
             return header[0] >> 2;
         case 1: {
-            const h = Buffer.alloc(2);
-            fs.readSync(fid, h, 0, 2, null);
-            return ((h[0] << 8) | h[1]) >> 2;
+            // Read 1 more byte, combine with header for 2-byte value
+            const extra = Buffer.alloc(1);
+            fs.readSync(fid, extra, 0, 1, null);
+            const value = header[0] | (extra[0] << 8);
+            return value >> 2;
         }
         case 2: {
-            const h = Buffer.alloc(4);
-            fs.readSync(fid, h, 0, 4, null);
-            return ((h[0] << 24) | (h[1] << 16) | (h[2] << 8) | h[3]) >> 2;
+            // Read 3 more bytes, combine with header for 4-byte value
+            const extra = Buffer.alloc(3);
+            fs.readSync(fid, extra, 0, 3, null);
+            const value = header[0] | (extra[0] << 8) | (extra[1] << 16) | (extra[2] << 24);
+            return value >>> 2; // Use >>> for unsigned right shift
         }
         case 3: {
-            const h = Buffer.alloc(8);
-            fs.readSync(fid, h, 0, 8, null);
-            let val = BigInt(0);
-            for (let i = 0; i < 8; ++i) {
-                val |= BigInt(h[i]) << BigInt(8 * i);
+            // Read 7 more bytes, combine with header for 8-byte value
+            const extra = Buffer.alloc(7);
+            fs.readSync(fid, extra, 0, 7, null);
+            let val = BigInt(header[0]);
+            for (let i = 0; i < 7; ++i) {
+                val |= BigInt(extra[i]) << BigInt(8 * (i + 1));
             }
             return Number(val >> BigInt(2));
         }
@@ -436,7 +441,7 @@ function write_value(file, value) {
         file.writeUint8(header);
         writeCompressed(file, Object.keys(value).length);
         for (const key in value) {
-            writeCompressed(file, key.length);
+            writeCompressed(file, Buffer.byteLength(key, 'utf8'));
             file.writeString(key);
             write_value(file, value[key]);
         }

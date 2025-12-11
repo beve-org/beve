@@ -304,11 +304,12 @@
         }
 
         function read_compressed() {
-            const header = buffer[cursor++];
+            const header = buffer[cursor];
             const config = header & 0b00000011;
 
             switch (config) {
                 case 0:
+                    cursor += 1;
                     return header >> 2;
                 case 1: {
                     const h = new DataView(buffer.buffer, cursor, 2);
@@ -323,8 +324,9 @@
                 case 3: {
                     let val = BigInt(0);
                     for (let i = 0; i < 8; ++i) {
-                        val |= BigInt(buffer[cursor++]) << BigInt(8 * i);
+                        val |= BigInt(buffer[cursor + i]) << BigInt(8 * i);
                     }
+                    cursor += 8;
                     return Number(val >> BigInt(2));
                 }
                 default:
@@ -498,7 +500,10 @@
     }
     
     function write_value(writer, value) {
-        if (Array.isArray(value) && value.length > 1 && typeof value[0] === 'number') {
+        if (value === null || value === undefined) {
+            // null header: type 0, is_bool = 0
+            writer.append_uint8(0);
+        } else if (Array.isArray(value) && value.length > 1 && value.every(v => typeof v === 'number')) {
             let header = 4;
             if (typeof value[0] === 'number' && !Number.isInteger(value[0])) {
                 header |= 0b01100000; // float64_t (double)
@@ -528,8 +533,11 @@
         } else if (typeof value === 'string') {
             let header = 2;
             writer.append_uint8(header);
-            writeCompressed(writer, value.length);
-            writer.append(value);
+            const bytes = new TextEncoder().encode(value);
+            writeCompressed(writer, bytes.length);
+            writer.ensureCapacity(bytes.length);
+            writer.buffer.set(bytes, writer.offset);
+            writer.offset += bytes.length;
         } else if (Array.isArray(value)) {
             let header = 5;
             writer.append_uint8(header);
@@ -537,17 +545,22 @@
             for (let i = 0; i < value.length; i++) {
                 write_value(writer, value[i]);
             }
-        } else if (typeof value === 'object' && Object.keys(value).length > 0) {
+        } else if (typeof value === 'object') {
+            // Filter out undefined values (matching JSON.stringify behavior)
+            const keys = Object.keys(value).filter(k => value[k] !== undefined);
             let header = 3;
             let keyType = 0; // Assuming keys are always strings
             let isSigned = false;
             header |= keyType << 3;
             header |= isSigned << 5;
             writer.append_uint8(header);
-            writeCompressed(writer, Object.keys(value).length);
-            for (const key in value) {
-                writeCompressed(writer, key.length);
-                writer.append(key);
+            writeCompressed(writer, keys.length);
+            for (const key of keys) {
+                const keyBytes = new TextEncoder().encode(key);
+                writeCompressed(writer, keyBytes.length);
+                writer.ensureCapacity(keyBytes.length);
+                writer.buffer.set(keyBytes, writer.offset);
+                writer.offset += keyBytes.length;
                 write_value(writer, value[key]);
             }
         } else {
