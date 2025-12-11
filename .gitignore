@@ -9,6 +9,13 @@
 !examples/*.json
 !examples/*.beve
 
+# Allow package.json in javascript
+!javascript/package.json
+!javascript/package-lock.json
+
+# JavaScript
+javascript/node_modules/
+
 # Added by cargo
 
 /target

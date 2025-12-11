@@ -1,0 +1,19 @@
+{
+  "name": "beve",
+  "version": "1.0.0",
+  "description": "BEVE (Binary Efficient Versatile Encoding) JavaScript library",
+  "main": "beve.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "beve",
+    "binary",
+    "encoding",
+    "serialization"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
