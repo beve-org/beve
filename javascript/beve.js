@@ -500,7 +500,10 @@
     }
     
     function write_value(writer, value) {
-        if (Array.isArray(value) && value.length > 1 && typeof value[0] === 'number') {
+        if (value === null || value === undefined) {
+            // null header: type 0, is_bool = 0
+            writer.append_uint8(0);
+        } else if (Array.isArray(value) && value.length > 1 && value.every(v => typeof v === 'number')) {
             let header = 4;
             if (typeof value[0] === 'number' && !Number.isInteger(value[0])) {
                 header |= 0b01100000; // float64_t (double)
@@ -542,15 +545,17 @@
             for (let i = 0; i < value.length; i++) {
                 write_value(writer, value[i]);
             }
-        } else if (typeof value === 'object' && Object.keys(value).length > 0) {
+        } else if (typeof value === 'object') {
+            // Filter out undefined values (matching JSON.stringify behavior)
+            const keys = Object.keys(value).filter(k => value[k] !== undefined);
             let header = 3;
             let keyType = 0; // Assuming keys are always strings
             let isSigned = false;
             header |= keyType << 3;
             header |= isSigned << 5;
             writer.append_uint8(header);
-            writeCompressed(writer, Object.keys(value).length);
-            for (const key in value) {
+            writeCompressed(writer, keys.length);
+            for (const key of keys) {
                 const keyBytes = new TextEncoder().encode(key);
                 writeCompressed(writer, keyBytes.length);
                 writer.ensureCapacity(keyBytes.length);

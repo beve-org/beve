@@ -76,6 +76,62 @@ describe('BEVE JavaScript Library', () => {
         });
     });
 
+    describe('Null and Undefined Handling (Issue #7)', () => {
+
+        test('null value', () => {
+            expect(roundTrip(null)).toBe(null);
+        });
+
+        test('undefined converts to null', () => {
+            expect(roundTrip(undefined)).toBe(null);
+        });
+
+        test('object with null value', () => {
+            const input = { value: null };
+            expect(roundTrip(input)).toEqual(input);
+        });
+
+        test('object with undefined value is omitted', () => {
+            const input = { defined: 'yes', notDefined: undefined };
+            const expected = { defined: 'yes' };
+            expect(roundTrip(input)).toEqual(expected);
+        });
+
+        test('object with only undefined values becomes empty', () => {
+            const input = { a: undefined, b: undefined };
+            expect(roundTrip(input)).toEqual({});
+        });
+
+        test('array with null elements', () => {
+            const input = [1, null, 3];
+            expect(roundTrip(input)).toEqual([1, null, 3]);
+        });
+
+        test('array with undefined elements converts to null', () => {
+            const input = [1, undefined, 3];
+            const expected = [1, null, 3];
+            expect(roundTrip(input)).toEqual(expected);
+        });
+
+        test('nested object with null', () => {
+            const input = { outer: { inner: null } };
+            expect(roundTrip(input)).toEqual(input);
+        });
+
+        test('mixed null and undefined in object', () => {
+            const input = {
+                present: 'value',
+                isNull: null,
+                isUndefined: undefined
+            };
+            const expected = {
+                present: 'value',
+                isNull: null
+            };
+            expect(roundTrip(input)).toEqual(expected);
+        });
+    });
+
     describe('String Handling', () => {
 
         test('empty string', () => {
@@ -194,9 +250,8 @@ describe('BEVE JavaScript Library', () => {
 
     describe('Objects', () => {
 
-        test('empty object throws', () => {
-            // Current implementation throws on empty objects
-            expect(() => roundTrip({})).toThrow();
+        test('empty object', () => {
+            expect(roundTrip({})).toEqual({});
         });
 
         test('simple object with string value', () => {
