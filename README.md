@@ -26,11 +26,11 @@ Higher means BEVE is faster by that factor. Format: Write/Read
 | Test | JSON | MsgPack | CBOR |
 |------|------|---------|------|
 | Complex Nested Object | 2.6x/2.2x | 2.2x/10.1x | 1.0x/1.1x |
-| std::vector\<double\> (10K) | 149.5x/140.9x | 17.3x/37.0x | 1.0x/1.0x |
-| std::vector\<float\> (10K) | 222.1x/229.9x | 33.7x/73.7x | 1.0x/1.0x |
-| std::vector\<uint64_t\> (10K) | 45.2x/83.2x | 18.0x/35.7x | 1.0x/1.0x |
-| std::vector\<uint32_t\> (10K) | 53.6x/88.8x | 33.6x/72.3x | 1.0x/1.0x |
-| std::vector\<uint16_t\> (10K) | 90.4x/113.6x | 69.1x/143.2x | 1.0x/0.8x |
+| std::vector\<double\> (10K) | 150.8x/147.6x | 17.5x/37.8x | 1.0x/1.0x |
+| std::vector\<float\> (10K) | 221.8x/231.6x | 33.1x/73.8x | 1.0x/1.0x |
+| std::vector\<uint64_t\> (10K) | 45.6x/85.5x | 17.9x/36.5x | 1.0x/1.0x |
+| std::vector\<uint32_t\> (10K) | 53.8x/88.8x | 34.0x/72.1x | 1.0x/1.0x |
+| std::vector\<uint16_t\> (10K) | 91.7x/130.8x | 67.6x/164.3x | 1.0x/0.9x |
 
 > CBOR benchmarks use [RFC 8746](https://datatracker.ietf.org/doc/rfc8746/) typed arrays via Glaze.
 
