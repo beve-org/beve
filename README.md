@@ -15,27 +15,39 @@ Version 1.0
 
 > BEVE is designed to be faster on modern hardware than CBOR, BSON, and MessagePack, but it is also more space efficient for typed arrays.
 
-## Performance vs MessagePack
+## Performance
 
-The following table lists the performance increase between BEVE with [Glaze](https://github.com/stephenberry/glaze) versus other libraries and their binary formats.
+BEVE with [Glaze](https://github.com/stephenberry/glaze) versus [JSON](https://www.json.org/), [MessagePack](https://github.com/msgpack/msgpack-c), and [CBOR](https://cbor.io/) (via [jsoncons](https://github.com/danielaparker/jsoncons)).
 
-| Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Read (Times Faster) | Write (Times Faster) |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------- | -------------------- |
-| [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 1.9X                | 13X                  |
-| double array                                                 | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 14X                 | 50X                  |
-| float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 29X                 | 81X                  |
-| uint16_t array                                               | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | 73X                 | 167X                 |
+### Speedup vs BEVE (Baseline)
+
+Higher means BEVE is faster by that factor. Format: Write/Read
+
+| Test | JSON | MsgPack | CBOR |
+|------|------|---------|------|
+| Complex Nested Object | 2.3x/2.2x | 2.0x/9.8x | 7.6x/31.8x |
+| std::vector\<double\> (10K) | 151.0x/143.3x | 17.7x/38.3x | 126.4x/56.8x |
+| std::vector\<float\> (10K) | 234.8x/229.4x | 35.4x/73.9x | 130.1x/106.1x |
+| std::vector\<uint64_t\> (10K) | 45.2x/84.1x | 17.4x/36.6x | 126.9x/60.7x |
+| std::vector\<uint32_t\> (10K) | 55.7x/91.5x | 34.0x/72.5x | 127.7x/108.4x |
+| std::vector\<uint16_t\> (10K) | 93.4x/147.2x | 68.0x/181.2x | 126.1x/270.2x |
+
+> CBOR benchmarks use [RFC 8746](https://datatracker.ietf.org/doc/rfc8746/) typed arrays via jsoncons `use_typed_arrays(true)`.
 
 [Performance test code](https://github.com/stephenberry/binary_performance)
 
-The table below shows binary message size versus BEVE. A positive value means the binary produced is larger than BEVE.
+### Message Sizes
 
-| Test                                                         | Libraries (vs [Glaze](https://github.com/stephenberry/glaze)) | Message Size |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
-| [Test Object](https://github.com/stephenberry/json_performance) | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | -3.4%        |
-| double array                                                 | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +12%         |
-| float array                                                  | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +25%         |
-| uint16_t array                                               | [msgpack-c](https://github.com/msgpack/msgpack-c) (c++)      | +50%         |
+| Test | JSON | BEVE | MessagePack | CBOR |
+|------|------|------|-------------|------|
+| Complex Nested Object | 616 B | 564 B | 545 B | 545 B |
+| std::vector\<double\> (10K) | 219.02 KB | 78.13 KB | 87.89 KB | 78.13 KB |
+| std::vector\<float\> (10K) | 124.11 KB | 39.07 KB | 48.83 KB | 39.07 KB |
+| std::vector\<uint64_t\> (10K) | 199.23 KB | 78.13 KB | 87.89 KB | 78.13 KB |
+| std::vector\<uint32_t\> (10K) | 104.97 KB | 39.07 KB | 48.83 KB | 39.07 KB |
+| std::vector\<uint16_t\> (10K) | 56.96 KB | 19.53 KB | 29.26 KB | 19.54 KB |
+
+BEVE and CBOR (with RFC 8746 typed arrays) store contiguous arrays as raw memory blocks, achieving the same message sizes. However, BEVE with Glaze is optimized to use direct `memcpy` operations, resulting in significantly higher throughput. MessagePack encodes each element individually with type tags, resulting in larger messages and slower performance for numeric arrays.
 
 ## Why Tagged Messages?
 
