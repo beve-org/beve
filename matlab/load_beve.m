@@ -226,6 +226,7 @@ function data = read_value(fid)
                 end
             elseif is_bool
                 % Read packed boolean values (8 per byte)
+                N = double(N); % Avoid integer division
                 num_bytes = ceil(N / 8);
                 packed_bytes = fread(fid, num_bytes, '*uint8', 'l');
                 
