@@ -119,12 +119,6 @@ function data = read_value(fid)
                 data = struct();
             else
                 data = []; % Empty object
-                empty_key = 'object';
-                try
-                    empty_key = evalin('caller','legal_string');
-                catch
-                end
-                warning("Zero object keys found for %s", empty_key);
                 return;
             end
 
