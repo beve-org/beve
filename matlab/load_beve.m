@@ -1,5 +1,5 @@
 % Load a .beve file
-% Reference: https://github.com/stephenberry/beve
+% Reference: https://github.com/beve-org/beve/blob/main/matlab/load_beve.m
 % Given Path to file: Load
 % Given Path to folder: Open load dialog box in folder
 % Given no arguments: Open load dialog box in working directory
