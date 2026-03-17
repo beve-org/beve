@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BEVE proposals and extensions in development">
+    <title>Proposals - BEVE</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">BEVE</a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu">
+                <span class="hamburger"></span>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="index.html#overview">Overview</a></li>
+                <li><a href="index.html#performance">Performance</a></li>
+                <li><a href="index.html#specification">Specification</a></li>
+                <li><a href="implementations.html">Implementations</a></li>
+                <li><a href="proposals.html">Proposals</a></li>
+                <li><a href="https://github.com/beve-org/beve" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+    <script>
+        document.querySelector('.nav-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-menu').classList.toggle('nav-open');
+            this.classList.toggle('nav-open');
+        });
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.querySelector('.nav-menu').classList.remove('nav-open');
+                document.querySelector('.nav-toggle').classList.remove('nav-open');
+            });
+        });
+    </script>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Proposals</h1>
+            <p class="tagline">Extensions and enhancements in development for BEVE</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="proposals-intro">
+            <h2>About BEVE Extensions</h2>
+            <p>BEVE supports extensions to handle specialized use cases while maintaining compatibility with the core specification. These proposals are working drafts that may be incorporated into future versions of BEVE.</p>
+        </section>
+
+        <section id="timestamp-extension">
+            <h2>Extension 4 — Time (Timestamps)</h2>
+            <p><em>Working draft for BEVE v1.0</em></p>
+
+            <div class="note">
+                <p><strong>Status:</strong> Working Draft</p>
+                <p><strong>Extension ID:</strong> 4</p>
+            </div>
+
+            <h3>Overview</h3>
+            <p>A compact, SIMD-friendly encoding for instants in time that:</p>
+            <ul>
+                <li>Round-trips cleanly to RFC 3339 / ISO-8601 (and IXDTF/RFC 9557) on the text side</li>
+                <li>Avoids floating point (no drift)</li>
+                <li>Scales to attoseconds without requiring 128-bit math for "now"</li>
+                <li>Supports high-throughput typed arrays</li>
+            </ul>
+
+            <h3>Goals</h3>
+            <ul>
+                <li>Exact representation of instants using <strong>integer ticks</strong></li>
+                <li><strong>Two-integer split</strong> for precision and range without bigints on the hot path</li>
+                <li>Single-value and <strong>array</strong> encodings with <strong>one set of metadata</strong> per array (epoch, unit, optional TZ)</li>
+                <li>Straightforward JSON projections: human (strings) and lossless (object)</li>
+            </ul>
+
+            <h3>Placement in BEVE Header Space</h3>
+            <p>This is a BEVE <strong>Extension</strong> (<code>HEADER</code> top 3 bits = <code>6</code>).</p>
+            <p>Within the extension space, <strong>id = 4</strong> denotes <em>Time (timestamps)</em>.</p>
+            <div class="note">
+                <p>Existing ids: 0=data delimiter, 1=type tag, 2=matrices, 3=complex numbers.<br>
+                New: <strong>4=time</strong></p>
+            </div>
+            <p>All multi-byte integers in this extension are <strong>little endian</strong>.</p>
+
+            <h3>TIME HEADER (1 byte)</h3>
+            <pre><code class="language-text">bits 0..1  SHAPE
+           0 = single timestamp
+           1 = timestamp array (exactly length 2)
+           2..3 = reserved
+
+bits 2..4  UNIT (decimal powers around seconds)
+           0 = ksec (10^3 s)
+           1 = s
+           2 = ms   (10^-3 s)
+           3 = µs   (10^-6 s)
+           4 = ns   (10^-9 s)
+           5 = ps   (10^-12 s)
+           6 = fs   (10^-15 s)
+           7 = as   (10^-18 s)
+
+bit 5      TZ_PRESENT
+           0 = no TZ field follows
+           1 = int16_t minutes east of UTC follows (fixed 2 bytes)
+
+bits 6..7  EPOCH/SCALE
+           0 = UNIX/POSIX (no leap seconds)
+           1 = UTC scale  (permits leap seconds)
+           2 = TAI
+           3 = GPS</code></pre>
+
+            <h4>Timezone field (optional; fixed width)</h4>
+            <p>If <code>TZ_PRESENT=1</code>, immediately write a <strong>2-byte <code>int16_t</code></strong>: minutes east of UTC.</p>
+            <ul>
+                <li>Valid range to emit: <strong>−1439..+1439</strong> (encoders MUST enforce)</li>
+                <li>Semantics: <strong>presentation metadata only</strong>; does <strong>not</strong> affect the instant encoded by the numeric fields</li>
+            </ul>
+
+            <h3>Payload Layouts</h3>
+
+            <h4>Single timestamp</h4>
+            <pre><code class="language-text">EXT(4) | TIME_HEADER | [TZ:int16]? |
+NUMBER (signed)   SECONDS_OFFSET |
+NUMBER (unsigned) PRECISION</code></pre>
+            <ul>
+                <li><code>NUMBER</code> is a BEVE integer value (the usual number header chooses width: 1/2/4/8/16/32 bytes, etc.)</li>
+            </ul>
+
+            <h4>Timestamp array</h4>
+            <pre><code class="language-text">EXT(4) | TIME_HEADER | [TZ:int16]? |
+ARRAY(len=2) |
+TYPED_ARRAY (signed int)   SECONDS_OFFSET[] |
+TYPED_ARRAY (unsigned int) PRECISION[]</code></pre>
+            <ul>
+                <li>The BEVE array header MUST report <strong>length = 2</strong> (seconds array first, precision array second)</li>
+                <li>Both typed arrays MUST have the <strong>same SIZE</strong> and are written <strong>back-to-back</strong></li>
+                <li>Each typed array uses standard BEVE typed-array headers</li>
+            </ul>
+
+            <h3>JSON/Text Projections</h3>
+
+            <h4>Human-oriented (default): RFC 3339 strings</h4>
+            <ul>
+                <li>Single: <code>"2025-10-16T12:34:56.123456789Z"</code></li>
+                <li>Array: <code>["2025-10-16T12:34:56Z", "..."]</code></li>
+                <li>Fractional digits match the <strong>UNIT</strong> (e.g., <code>ns</code> → up to 9 digits)</li>
+                <li>If <code>TZ_PRESENT=1</code>, use that offset for printing (e.g., <code>-05:00</code>), while the <strong>instant</strong> remains absolute</li>
+            </ul>
+
+            <h4>Lossless structured object</h4>
+            <p><strong>Single:</strong></p>
+            <pre><code class="language-json">{
+  "epoch": "unix",                 // "unix" | "utc" | "tai" | "gps"
+  "unit": "ps",                    // "ksec","s","ms","us","ns","ps","fs","as"
+  "seconds": 1750000000,           // signed integer
+  "precision": 123456789012,       // unsigned integer
+  "offset_minutes": -300           // optional; omitted if TZ not present
+}</code></pre>
+
+            <p><strong>Array:</strong></p>
+            <pre><code class="language-json">{
+  "epoch": "unix",
+  "unit": "ns",
+  "offset_minutes": 0,
+  "seconds":   [1697463296, 1697466896],
+  "precision": [        42,  987654321]
+}</code></pre>
+
+            <h3>Examples</h3>
+
+            <h4>Single, UNIX epoch, nanoseconds, UTC</h4>
+            <p>Meaning: <code>2025-10-16T12:34:56.000000789Z</code></p>
+            <pre><code class="language-text">EXT(4) | TH(shape=single, unit=ns, tz=0, epoch=unix) |
+NUMBER(int64) seconds=1697463296 |
+NUMBER(uint32) precision=789</code></pre>
+
+            <h4>Array, UNIX epoch, microseconds, TZ = −05:00</h4>
+            <p>Meaning: local offset preserved for printing; instants absolute.</p>
+            <pre><code class="language-text">EXT(4) | TH(shape=array, unit=us, tz=1, epoch=unix) | int16(-300) |
+TYPED_ARRAY(int64)   seconds[ N ] |
+TYPED_ARRAY(uint32)  precision[ N ]</code></pre>
+
+            <h4>ksec example</h4>
+            <ul>
+                <li><code>unit = ksec</code></li>
+                <li><code>seconds = 2</code> (→ 2000 s), <code>precision = 17</code> → instant = epoch + 2017 s</li>
+            </ul>
+
+            <h3>Key Features</h3>
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <h3>Integer-Only Math</h3>
+                    <p>No floating point drift, exact representations</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <h3>Attosecond Precision</h3>
+                    <p>Scales to 10^-18 seconds without bigints for current dates</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <h3>SIMD-Friendly Arrays</h3>
+                    <p>Metadata shared across arrays for high throughput</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <h3>Multiple Epochs</h3>
+                    <p>Support for UNIX, UTC, TAI, and GPS time scales</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <h3>Timezone Preservation</h3>
+                    <p>Optional timezone field for presentation without affecting instant</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3>RFC 3339 Compatible</h3>
+                    <p>Clean round-trip to ISO-8601 and IXDTF formats</p>
+                </div>
+            </div>
+
+            <div class="note">
+                <p><strong>Full Specification:</strong> For the complete technical specification, validation rules, and reference algorithms, see the <a href="https://github.com/beve-org/beve/blob/main/proposals/Timestamp%20Extension.md" target="_blank">full proposal on GitHub</a>.</p>
+            </div>
+        </section>
+
+        <section id="contribute">
+            <h2>Contributing to Proposals</h2>
+            <p>We welcome feedback and contributions to BEVE proposals. To participate:</p>
+            <ul>
+                <li>Join the discussion on <a href="https://github.com/beve-org/beve/discussions" target="_blank">GitHub Discussions</a></li>
+                <li>Submit issues or suggestions on the <a href="https://github.com/beve-org/beve/issues" target="_blank">GitHub repository</a></li>
+                <li>Review and comment on active proposals in the <a href="https://github.com/beve-org/beve/tree/main/proposals" target="_blank">proposals directory</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 BEVE. Licensed under the <a href="https://github.com/beve-org/beve/blob/main/LICENSE" target="_blank">MIT License</a>.</p>
+            <p>
+                <a href="https://github.com/beve-org/beve" target="_blank">GitHub</a> |
+                <a href="https://github.com/beve-org/beve/discussions" target="_blank">Discussions</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>hljs.highlightAll();</script>
+</body>
+</html>

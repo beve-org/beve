@@ -1,5 +1,5 @@
 % Load a .beve file
-% Reference: https://github.com/stephenberry/beve
+% Reference: https://github.com/beve-org/beve/blob/main/matlab/load_beve.m
 % Given Path to file: Load
 % Given Path to folder: Open load dialog box in folder
 % Given no arguments: Open load dialog box in working directory
@@ -119,12 +119,6 @@ function data = read_value(fid)
                 data = struct();
             else
                 data = []; % Empty object
-                empty_key = 'object';
-                try
-                    empty_key = evalin('caller','legal_string');
-                catch
-                end
-                warning("Zero object keys found for %s", empty_key);
                 return;
             end
 
@@ -226,6 +220,7 @@ function data = read_value(fid)
                 end
             elseif is_bool
                 % Read packed boolean values (8 per byte)
+                N = double(N); % Avoid integer division
                 num_bytes = ceil(N / 8);
                 packed_bytes = fread(fid, num_bytes, '*uint8', 'l');
                 
