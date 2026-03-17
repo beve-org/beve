@@ -49,6 +49,19 @@ Higher means BEVE is faster by that factor. Format: Write/Read
 
 BEVE and CBOR (with RFC 8746 typed arrays) store contiguous arrays as raw memory blocks, achieving the same message sizes and throughput when using optimized implementations like Glaze. MessagePack encodes each element individually with type tags, resulting in larger messages and slower performance for numeric arrays.
 
+### Struct Serialization: BEVE vs CBOR
+
+For struct-heavy workloads, BEVE is significantly faster than CBOR due to its little-endian wire format (no byte swaps on x86/ARM) and optimized key handling.
+
+| Test | Write | Read |
+|------|-------|------|
+| Coordinate (3 doubles) | 1.25x | 1.25x |
+| vector\<Sensor\> (100 elements) | 1.23x | 1.36x |
+| NestedConfig (50 sensors + map) | 1.29x | 1.29x |
+| vector\<Coordinate\> (1000 elements) | 1.34x | 1.23x |
+
+[Benchmark code](https://github.com/stephenberry/beve/blob/main/cpp/benchmarks/beve_cbor_benchmark.cpp)
+
 ## Why Tagged Messages?
 
 *Flexibility and efficiency*
