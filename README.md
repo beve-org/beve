@@ -51,7 +51,7 @@ BEVE and CBOR (with RFC 8746 typed arrays) store contiguous arrays as raw memory
 
 ### Struct Serialization: BEVE vs CBOR
 
-For struct-heavy workloads, BEVE is significantly faster than CBOR due to its little-endian wire format (no byte swaps on x86/ARM) and optimized key handling.
+For struct-heavy workloads, BEVE is faster than CBOR due to its little-endian wire format (no byte swaps on x86/ARM), avoiding float conversions, and easier key handling.
 
 | Test | Write | Read |
 |------|-------|------|
