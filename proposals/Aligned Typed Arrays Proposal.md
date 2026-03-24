@@ -37,8 +37,8 @@ Rather than consuming an extension ID, aligned typed arrays are encoded as a new
 In the current specification, typed array category 3 (bits 3–4 = `11`) uses bit 5 to distinguish between two sub-types:
 
 ```
-0 -> boolean      0b00'0'11'100
-1 -> string       0b01'0'11'100
+0 -> boolean      0b00'0'11'100  →  0x1C
+1 -> string       0b00'1'11'100  →  0x3C
 ```
 
 Bits 6–7 are unused and must be zero. This proposal defines a third sub-type.
@@ -48,7 +48,7 @@ Bits 6–7 are unused and must be zero. This proposal defines a third sub-type.
 When bits 5–7 of a typed array header encode the value `2` (bit 6 set, bits 5 and 7 clear), the typed array is an **aligned numeric array**:
 
 ```
-2 -> aligned      0b010'11'100  →  0x3C
+2 -> aligned      0b010'11'100  →  0x5C
 ```
 
 The next byte is a **numeric typed array header** — identical to a standard BEVE typed array header for a numeric type. This second header byte encodes the element category (floating point, signed integer, or unsigned integer) and the byte count, using the same bit layout as a normal typed array header byte. The decoder already knows how to parse this; it simply reads it from the second byte instead of the first.
@@ -61,7 +61,7 @@ TYPED_ARRAY_HEADER(aligned) | NUMERIC_HEADER | SIZE | PADDING | DATA
 
 Where:
 
-- `TYPED_ARRAY_HEADER(aligned)` — 1 byte (`0x3C`), a typed array header with category 3, sub-type 2, indicating an aligned numeric array.
+- `TYPED_ARRAY_HEADER(aligned)` — 1 byte (`0x5C`), a typed array header with category 3, sub-type 2, indicating an aligned numeric array.
 - `NUMERIC_HEADER` — 1 byte, a standard typed array header encoding the element category (bits 3–4: 0=float, 1=signed, 2=unsigned) and byte count (bits 5–7). Bits 0–2 **must** be `0b100` (the typed array type tag); decoders **must** reject the message if they are not. This is the same byte you would write for a non-aligned typed array of the same element type.
 - `SIZE` — a compressed unsigned integer giving the number of elements (same semantics as standard typed arrays).
 - `PADDING` — 0 to `(alignment - 1)` bytes, inserted so that the first byte of `DATA` falls at a byte offset from the message origin that is a multiple of the element alignment. The contents of padding bytes are unspecified; decoders **must** ignore them.
@@ -121,7 +121,7 @@ Note: 1-byte element types trivially satisfy alignment and never require padding
 1. **Begin at byte offset 0 of the message buffer.** If writing a framing header, do so first and advance the offset accordingly. Track byte offsets throughout encoding.
 2. **Encode the root VALUE normally**, tracking offsets.
 3. **When encoding a typed array that should be aligned:**
-   a. Write the `TYPED_ARRAY_HEADER(aligned)` byte (`0x3C`).
+   a. Write the `TYPED_ARRAY_HEADER(aligned)` byte (`0x5C`).
    b. Write the `NUMERIC_HEADER` byte (same as a standard numeric typed array header).
    c. Write the `SIZE` compressed unsigned integer.
    d. Compute `padding = (alignment - (current_offset % alignment)) % alignment`.
@@ -135,7 +135,7 @@ Consider encoding a message containing a single aligned `float64_t` typed array 
 ```
 Offset  Bytes             Description
 ------  -----             -----------
-0       3C                TYPED_ARRAY_HEADER: aligned typed array
+0       5C                TYPED_ARRAY_HEADER: aligned typed array
                           (0b010'11'100: category=3, sub-type=2=aligned)
 1       64                NUMERIC_HEADER: float64 typed array
                           (0b011'00'100: byte_count=3→8 bytes, float, typed array)
