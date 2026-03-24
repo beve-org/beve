@@ -11,16 +11,10 @@ On modern hardware, unaligned access is either a performance penalty or an outri
 ### Design Goals
 
 1. **Zero-copy typed arrays** — typed array data can be reinterpreted in-place as `span<T>` where `T` is the element type.
-2. **Deterministic padding** — the padding length is computable from the element type and the current byte offset; it does not need to be stored explicitly.
+2. **Self-describing padding** — the padding length is stored as a single byte, so decoders can skip padding without tracking byte offsets from the message origin.
 3. **Contiguous memory requirement** — the entire BEVE message from its start up to and including any aligned typed array must reside in a single contiguous buffer.
 4. **Composability** — any extension that embeds a typed array (matrices, complex numbers, timestamps) gains zero-copy support automatically.
-5. **Backward compatibility** — standard BEVE decoders that predate this proposal will encounter a clean failure (unknown sub-type), not silent misinterpretation.
-
-## Byte Offset Origin
-
-**Byte 0 is the first byte of the message buffer.** All offset calculations for alignment padding are relative to this origin. If a framing header (Extension 5) is present, it occupies bytes 0–1 and the root value begins at byte offset 2. If no framing header is present, the root value begins at byte offset 0.
-
-Both encoder and decoder inherently track their position from the start of the message buffer, so they always agree on byte offsets regardless of whether a framing header is present.
+5. **Simple decoding** — decoders do not need to track absolute byte offsets; all information needed to parse an aligned typed array is local to the header.
 
 ## Buffer Alignment Requirement
 
@@ -56,7 +50,7 @@ The next byte is a **numeric typed array header** — identical to a standard BE
 ### Layout
 
 ```
-TYPED_ARRAY_HEADER(aligned) | NUMERIC_HEADER | SIZE | PADDING | DATA
+TYPED_ARRAY_HEADER(aligned) | NUMERIC_HEADER | SIZE | PADDING_LENGTH | PADDING | DATA
 ```
 
 Where:
@@ -64,23 +58,26 @@ Where:
 - `TYPED_ARRAY_HEADER(aligned)` — 1 byte (`0x5C`), a typed array header with category 3, sub-type 2, indicating an aligned numeric array.
 - `NUMERIC_HEADER` — 1 byte, a standard typed array header encoding the element category (bits 3–4: 0=float, 1=signed, 2=unsigned) and byte count (bits 5–7). Bits 0–2 **must** be `0b100` (the typed array type tag); decoders **must** reject the message if they are not. This is the same byte you would write for a non-aligned typed array of the same element type.
 - `SIZE` — a compressed unsigned integer giving the number of elements (same semantics as standard typed arrays).
-- `PADDING` — 0 to `(alignment - 1)` bytes, inserted so that the first byte of `DATA` falls at a byte offset from the message origin that is a multiple of the element alignment. The contents of padding bytes are unspecified; decoders **must** ignore them.
+- `PADDING_LENGTH` — 1 byte, the number of padding bytes that follow. Valid range is 0 to `alignment - 1`. Decoders **must** validate that `PADDING_LENGTH` does not extend past the end of the message buffer.
+- `PADDING` — 0 to `(alignment - 1)` bytes, as indicated by `PADDING_LENGTH`. The contents of padding bytes are unspecified; decoders **must** ignore them.
 - `DATA` — the raw element data, identical to a standard typed array payload.
 
 ### Alignment Calculation
 
+The encoder computes the padding length as follows:
+
 Given:
 
-- `offset_after_size` — the byte offset (from byte 0 of the message buffer) of the first byte after the `SIZE` field.
+- `offset_after_padding_length` — the byte offset (from byte 0 of the message buffer) of the first byte after the `PADDING_LENGTH` field.
 - `alignment` — the natural alignment of the element type in bytes (equal to the element size for all standard numeric types).
 
 The number of padding bytes is:
 
 ```
-padding = (alignment - (offset_after_size % alignment)) % alignment
+padding = (alignment - (offset_after_padding_length % alignment)) % alignment
 ```
 
-This value is deterministic. The encoder inserts exactly this many bytes; the decoder computes the same value and skips them.
+The encoder writes this value into `PADDING_LENGTH` and then inserts exactly that many padding bytes. The decoder simply reads `PADDING_LENGTH` and skips that many bytes — it does not need to recompute the value.
 
 ### Alignment Values by Element Type
 
@@ -106,27 +103,26 @@ Note: 1-byte element types trivially satisfy alignment and never require padding
 
 ## Decoding Procedure
 
-1. **Begin at byte offset 0 of the message buffer.** If a framing header is present, decode it and advance the offset accordingly. Track the current byte offset throughout decoding.
-2. **Decode the root VALUE normally**, tracking the current byte offset at each point.
-3. **Upon encountering a typed array with category 3, sub-type 2 (aligned):**
+1. **Upon encountering a typed array with category 3, sub-type 2 (aligned):**
    a. Read the `NUMERIC_HEADER` byte to determine element type and size.
    b. Read the `SIZE` compressed unsigned integer to get the element count.
-   c. Record `offset_after_size` — the current byte offset.
-   d. Compute `padding = (alignment - (offset_after_size % alignment)) % alignment`.
-   e. Skip `padding` bytes.
+   c. Read the `PADDING_LENGTH` byte.
+   d. Validate that `PADDING_LENGTH` bytes remain in the buffer.
+   e. Skip `PADDING_LENGTH` bytes.
    f. The next `element_count * element_size` bytes are the data payload, **already aligned**. Return a pointer/span directly into the buffer.
+
+Note: The decoder does not need to track absolute byte offsets from the message origin. All information needed to parse the aligned typed array is contained in its header fields.
 
 ## Encoding Procedure
 
-1. **Begin at byte offset 0 of the message buffer.** If writing a framing header, do so first and advance the offset accordingly. Track byte offsets throughout encoding.
-2. **Encode the root VALUE normally**, tracking offsets.
-3. **When encoding a typed array that should be aligned:**
+1. **When encoding a typed array that should be aligned:**
    a. Write the `TYPED_ARRAY_HEADER(aligned)` byte (`0x5C`).
    b. Write the `NUMERIC_HEADER` byte (same as a standard numeric typed array header).
    c. Write the `SIZE` compressed unsigned integer.
-   d. Compute `padding = (alignment - (current_offset % alignment)) % alignment`.
-   e. Write `padding` bytes (contents are unspecified; zero is conventional).
-   f. Write the raw element data.
+   d. Compute `padding = (alignment - ((current_offset + 1) % alignment)) % alignment`, where `current_offset` is the byte offset of the `PADDING_LENGTH` field and `+1` accounts for the `PADDING_LENGTH` byte itself.
+   e. Write `padding` as the `PADDING_LENGTH` byte.
+   f. Write `padding` bytes (contents are unspecified; zero is conventional).
+   g. Write the raw element data.
 
 ## Worked Example
 
@@ -140,8 +136,9 @@ Offset  Bytes             Description
 1       64                NUMERIC_HEADER: float64 typed array
                           (0b011'00'100: byte_count=3→8 bytes, float, typed array)
 2       0C                SIZE: 3 elements (3 << 2 | 0 = 0x0C, 1-byte compressed uint)
-3       xx xx xx xx xx    PADDING: 5 bytes (contents unspecified)
-                          (alignment=8, offset_after_size=3, padding=(8-3%8)%8=5)
+3       04                PADDING_LENGTH: 4 bytes
+                          (alignment=8, offset_after_padding_length=4, padding=(8-4%8)%8=4)
+4       xx xx xx xx       PADDING: 4 bytes (contents unspecified)
 8       00 00 00 00       DATA[0]: 1.0 as float64 little-endian
         00 00 F0 3F
 16      00 00 00 00       DATA[1]: 2.0 as float64 little-endian
@@ -180,29 +177,29 @@ No changes to the complex number extension are required.
 
 ## Nested / Multiple Aligned Arrays
 
-A message may contain multiple aligned typed arrays (for example, as values in an object). Each one computes its own padding independently based on its offset from byte 0. The contiguous-memory requirement applies to the entire message.
+A message may contain multiple aligned typed arrays (for example, as values in an object). Each one computes its own padding independently based on its position in the message. The contiguous-memory requirement applies to the entire message.
 
 Because the headers, sizes, and keys between typed arrays will vary in length, each aligned typed array may have a different amount of padding. This is expected and correct.
 
 ## Impact on Message Size
 
-An aligned typed array uses one extra byte compared to a standard typed array (the additional `NUMERIC_HEADER` byte), plus at most `alignment - 1` bytes of padding. For typical payloads containing large arrays, this overhead is negligible. For messages with many small aligned arrays, the overhead could be more significant. Implementations should consider using standard (unaligned) typed arrays for small arrays where the copy cost is trivial.
+An aligned typed array uses two extra bytes compared to a standard typed array (the additional `NUMERIC_HEADER` byte and the `PADDING_LENGTH` byte), plus at most `alignment - 1` bytes of padding. For typical payloads containing large arrays, this overhead is negligible. For messages with many small aligned arrays, the overhead could be more significant. Implementations should consider using standard (unaligned) typed arrays for small arrays where the copy cost is trivial.
 
 As a guideline: the copy cost of re-aligning `N` bytes is roughly proportional to `N`, while the padding overhead is bounded by a constant. For arrays larger than a few cache lines (e.g., >64 bytes of data), alignment padding is almost always worthwhile.
 
 ## Backward Compatibility
 
-- Decoders that predate this proposal will encounter typed array category 3 with an unrecognized sub-type value of 2. This is a clean failure — the decoder knows it is dealing with a typed array but does not recognize the sub-type. This is no worse than an unknown extension ID, and arguably better since the context is preserved.
+- Decoders that predate this proposal will encounter typed array category 3 with sub-type 2 in bits 5–7. Decoders that validate the sub-type range will reject the message cleanly. Decoders that only check bit 5 (boolean vs string) may misinterpret the header — this is consistent with how any new sub-type or extension interacts with older parsers that do not validate reserved bits. Implementations are encouraged to validate the full sub-type range for category 3 typed arrays.
 
 ## Security Considerations
 
-- Padding bytes are unspecified and **must** be ignored by decoders. Because zeros are valid data in a binary format, requiring zero-padding provides no security benefit and adds unnecessary verification cost in the decode path.
-- Decoders **must** validate that the computed padding does not extend beyond the message buffer.
+- The `PADDING_LENGTH` byte is a length field subject to the same validation as any other length in the format (e.g., `SIZE`, string lengths). Decoders **must** validate that `PADDING_LENGTH` does not extend beyond the message buffer. No additional validation beyond standard bounds checking is required — a corrupted padding length poses the same class of risk as a corrupted element count.
+- Padding bytes are unspecified and **must** be ignored by decoders.
 
 ## Summary
 
 This proposal adds zero-copy typed array support to BEVE through a new sub-type within the existing typed array tag:
 
-**Aligned Typed Array** (typed array category 3, sub-type 2): uses a second header byte to encode the numeric element type, followed by the element count, deterministic padding, and the data payload. Because alignment lives within the typed array tag itself, every extension that embeds a typed array — matrices, complex numbers, timestamps — gains zero-copy support automatically with no modifications.
+**Aligned Typed Array** (typed array category 3, sub-type 2): uses a second header byte to encode the numeric element type, followed by the element count, a padding length byte, padding, and the data payload. Because alignment lives within the typed array tag itself, every extension that embeds a typed array — matrices, complex numbers, timestamps — gains zero-copy support automatically with no modifications.
 
-This allows decoders to return direct pointers into the message buffer as typed spans, eliminating copy and allocation overhead for large numerical arrays — a critical optimization for scientific computing, real-time data processing, and high-throughput serialization pipelines.
+The explicit padding length byte means decoders do not need to track absolute byte offsets from the message origin — all information needed to parse the array is local to its header. This simplifies decoder implementation while maintaining zero-copy access for large numerical arrays.
