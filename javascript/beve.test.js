@@ -440,6 +440,84 @@ describe('BEVE JavaScript Library', () => {
         });
     });
 
+    describe('Aligned Typed Arrays', () => {
+
+        test('aligned float64 array [1.0, 2.0, 3.0]', () => {
+            // From the proposal's worked example
+            const buf = new Uint8Array([
+                0x5C, 0x64, 0x0C, 0x04, 0x00, 0x00, 0x00, 0x00, // headers, size=3, padding=4
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F, // 1.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, // 2.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40, // 3.0
+            ]);
+            const result = beve.read_beve(buf);
+            expect(result).toEqual([1.0, 2.0, 3.0]);
+        });
+
+        test('aligned int32 array [10, 20, 30]', () => {
+            const buf = new Uint8Array([
+                0x5C, 0x4C, 0x0C, 0x00, // headers, size=3, padding=0
+                0x0A, 0x00, 0x00, 0x00, // 10
+                0x14, 0x00, 0x00, 0x00, // 20
+                0x1E, 0x00, 0x00, 0x00, // 30
+            ]);
+            const result = beve.read_beve(buf);
+            expect(result).toEqual([10, 20, 30]);
+        });
+
+        test('aligned uint16 array [100, 200, 300]', () => {
+            const buf = new Uint8Array([
+                0x5C, 0x34, 0x0C, 0x00, // headers, size=3, padding=0
+                0x64, 0x00,             // 100
+                0xC8, 0x00,             // 200
+                0x2C, 0x01,             // 300
+            ]);
+            const result = beve.read_beve(buf);
+            expect(result).toEqual([100, 200, 300]);
+        });
+
+        test('aligned float64 array from example file', () => {
+            const filePath = path.join(__dirname, '..', 'examples', 'aligned_float64_array.beve');
+            if (fs.existsSync(filePath)) {
+                const buffer = fs.readFileSync(filePath);
+                const data = beve.read_beve(new Uint8Array(buffer));
+                expect(data).toEqual([1.0, 2.0, 3.0]);
+            }
+        });
+
+        test('aligned int32 array from example file', () => {
+            const filePath = path.join(__dirname, '..', 'examples', 'aligned_int32_array.beve');
+            if (fs.existsSync(filePath)) {
+                const buffer = fs.readFileSync(filePath);
+                const data = beve.read_beve(new Uint8Array(buffer));
+                expect(data).toEqual([10, 20, 30]);
+            }
+        });
+
+        test('aligned float32 array with padding', () => {
+            // Construct an aligned float32 array where padding is needed
+            // Header: 0x5C, Numeric: 0x44 (float32), Size: 2 (0x08)
+            // offset_after_padding_length = 4, alignment = 4, padding = (4-4%4)%4 = 0
+            const buf = new Uint8Array([
+                0x5C, 0x44, 0x08, 0x00, // headers, size=2, padding=0
+                0x00, 0x00, 0x80, 0x3F, // 1.0f
+                0x00, 0x00, 0x00, 0x40, // 2.0f
+            ]);
+            const result = beve.read_beve(buf);
+            expect(result[0]).toBeCloseTo(1.0);
+            expect(result[1]).toBeCloseTo(2.0);
+        });
+
+        test('aligned int8 array (no alignment needed)', () => {
+            const buf = new Uint8Array([
+                0x5C, 0x0C, 0x10, 0x00, // headers (int8), size=4, padding=0
+                0x01, 0x02, 0x03, 0x04, // 1, 2, 3, 4
+            ]);
+            const result = beve.read_beve(buf);
+            expect(result).toEqual([1, 2, 3, 4]);
+        });
+    });
+
     describe('Compatibility Tests with Example Files', () => {
         const examplesDir = path.join(__dirname, '..', 'examples');
 

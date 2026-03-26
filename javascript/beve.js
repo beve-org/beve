@@ -118,8 +118,8 @@
                         const byte_count_array = config[byte_count_index_array];
 
                         if (num_type === 3) {
-                            const is_string = (header & 0b00100000) >> 5;
-                            if (is_string) {
+                            const sub_type = (header & 0b11100000) >> 5;
+                            if (sub_type === 1) {
                                 const N = read_compressed();
                                 const array = new Array(N);
                                 for (let i = 0; i < N; ++i) {
@@ -129,8 +129,50 @@
                                     array[i] = str;
                                 }
                                 return array;
-                            } else {
+                            } else if (sub_type === 2) {
+                                // aligned typed array
+                                const numeric_header = buffer[cursor++];
+                                if ((numeric_header & 0b00000111) !== 0b100) {
+                                    throw new Error("Invalid aligned typed array numeric header");
+                                }
+                                const a_num_type = (numeric_header & 0b00011000) >> 3;
+                                if (a_num_type === 3) {
+                                    throw new Error("Aligned typed array numeric header must not encode boolean or string");
+                                }
+                                const a_byte_count = config[(numeric_header & 0b11100000) >> 5];
+                                const N = read_compressed();
+                                const padding_length = buffer[cursor++];
+                                if (cursor + padding_length > buffer.length) {
+                                    throw new Error("Aligned typed array padding extends past end of buffer");
+                                }
+                                cursor += padding_length;
+
+                                const array = new Array(N);
+                                if (a_num_type === 0) { // float
+                                    switch (a_byte_count) {
+                                        case 4: for (let i = 0; i < N; ++i) array[i] = readFloat(); break;
+                                        case 8: for (let i = 0; i < N; ++i) array[i] = readDouble(); break;
+                                    }
+                                } else if (a_num_type === 1) { // signed int
+                                    switch (a_byte_count) {
+                                        case 1: for (let i = 0; i < N; ++i) array[i] = readInt8(); break;
+                                        case 2: for (let i = 0; i < N; ++i) array[i] = readInt16(); break;
+                                        case 4: for (let i = 0; i < N; ++i) array[i] = readInt32(); break;
+                                        case 8: for (let i = 0; i < N; ++i) array[i] = readBigInt64(); break;
+                                    }
+                                } else { // unsigned int
+                                    switch (a_byte_count) {
+                                        case 1: for (let i = 0; i < N; ++i) array[i] = readUInt8(); break;
+                                        case 2: for (let i = 0; i < N; ++i) array[i] = readUInt16(); break;
+                                        case 4: for (let i = 0; i < N; ++i) array[i] = readUInt32(); break;
+                                        case 8: for (let i = 0; i < N; ++i) array[i] = readBigUInt64(); break;
+                                    }
+                                }
+                                return array;
+                            } else if (sub_type === 0) {
                                 throw new Error("Boolean array support not implemented");
+                            } else {
+                                throw new Error("Unknown typed array sub-type: " + sub_type);
                             }
                         } else if (is_float) {
                             const N = read_compressed();

@@ -82,17 +82,43 @@ def load_beve(filename):
             is_float = num_type == 0
             is_signed = num_type == 1
 
-            if num_type == 3:  # boolean or string
-                is_string = np.bitwise_and(header, 0b00100000) >> 5
-                if is_string:
+            if num_type == 3:  # boolean, string, or aligned
+                sub_type = np.bitwise_and(header, 0b11100000) >> 5
+                if sub_type == 1:  # string array
                     array_size = read_compressed(fid)
                     data = []
                     for _ in range(array_size):
                         string_size = read_compressed(fid)
                         data.append(fid.read(string_size).decode("utf-8"))
-                    
-                else:
+                elif sub_type == 2:  # aligned typed array
+                    numeric_header = np.fromfile(fid, dtype=np.uint8, count=1)[0]
+                    if (numeric_header & 0b00000111) != 0b100:
+                        raise ValueError("Invalid aligned typed array numeric header")
+                    a_num_type = (numeric_header & 0b00011000) >> 3
+                    if a_num_type == 3:
+                        raise ValueError("Aligned typed array numeric header must not encode boolean or string")
+                    a_byte_count_index = (numeric_header & 0b11100000) >> 5
+                    a_config = np.uint8([1, 2, 4, 8, 16, 32, 64, 128])
+                    a_byte_count = a_config[a_byte_count_index]
+                    size = read_compressed(fid)
+                    padding_length = np.fromfile(fid, dtype=np.uint8, count=1)[0]
+                    if padding_length > 0:
+                        padding_bytes = fid.read(int(padding_length))
+                        if len(padding_bytes) < padding_length:
+                            raise ValueError("Aligned typed array padding extends past end of file")
+                    a_is_float = a_num_type == 0
+                    a_is_signed = a_num_type == 1
+                    if a_is_float:
+                        data = np.fromfile(fid, dtype=np.float32 if a_byte_count == 4 else np.float64, count=size, sep="")
+                    else:
+                        if a_is_signed:
+                            data = np.fromfile(fid, dtype=np.int8 if a_byte_count == 1 else np.int16 if a_byte_count == 2 else np.int32 if a_byte_count == 4 else np.int64, count=size, sep="")
+                        else:
+                            data = np.fromfile(fid, dtype=np.uint8 if a_byte_count == 1 else np.uint16 if a_byte_count == 2 else np.uint32 if a_byte_count == 4 else np.uint64, count=size, sep="")
+                elif sub_type == 0:
                     raise NotImplementedError("Boolean array support not implemented")
+                else:
+                    raise ValueError("Unknown typed array sub-type: " + str(int(sub_type)))
             else:
                 config = np.uint8([1, 2, 4, 8, 16, 32, 64, 128])
                 byte_count_index = np.bitwise_and(header, 0b11100000) >> 5

@@ -165,9 +165,64 @@ function data = read_value(fid)
             [is_float, is_signed, is_bool_or_string] = ...
                 deal(element_type == 0, element_type == 1, element_type == 3);
             is_numeric = not(is_bool_or_string);
-            string_flag = bitshift(bitand(header, 0b00100000), -5);
-            is_string = is_bool_or_string && string_flag;
-            is_bool = is_bool_or_string && not(string_flag);
+            sub_type = bitshift(bitand(header, 0b11100000), -5);
+            is_string = is_bool_or_string && (sub_type == 1);
+            is_bool = is_bool_or_string && (sub_type == 0);
+            is_aligned = is_bool_or_string && (sub_type == 2);
+
+            if is_aligned
+                % Aligned typed array
+                numeric_header = fread(fid, 1, '*uint8', 'l');
+                assert(bitand(numeric_header, 0b00000111) == 0b100, ...
+                    'Invalid aligned typed array numeric header');
+                a_element_type = bitshift(bitand(numeric_header, 0b00011000), -3);
+                assert(a_element_type ~= 3, ...
+                    'Aligned typed array numeric header must not encode boolean or string');
+                a_is_float = (a_element_type == 0);
+                a_is_signed = (a_element_type == 1);
+                a_byte_count_index = bitshift(bitand(numeric_header, 0b11100000), -5);
+                a_byte_count = config(a_byte_count_index + 1);
+                N = read_compressed(fid);
+                padding_length = fread(fid, 1, '*uint8', 'l');
+                if padding_length > 0
+                    [~, count] = fread(fid, padding_length, '*uint8', 'l');
+                    assert(count == padding_length, ...
+                        'Aligned typed array padding extends past end of file');
+                end
+
+                if a_is_float
+                    switch a_byte_count
+                        case 4
+                            data = fread(fid, N, '*float32', 'l');
+                        case 8
+                            data = fread(fid, N, '*float64', 'l');
+                    end
+                else
+                    if a_is_signed
+                        switch a_byte_count
+                            case 1
+                                data = fread(fid, N, '*int8', 'l');
+                            case 2
+                                data = fread(fid, N, '*int16', 'l');
+                            case 4
+                                data = fread(fid, N, '*int32', 'l');
+                            case 8
+                                data = fread(fid, N, '*int64', 'l');
+                        end
+                    else
+                        switch a_byte_count
+                            case 1
+                                data = fread(fid, N, '*uint8', 'l');
+                            case 2
+                                data = fread(fid, N, '*uint16', 'l');
+                            case 4
+                                data = fread(fid, N, '*uint32', 'l');
+                            case 8
+                                data = fread(fid, N, '*uint64', 'l');
+                        end
+                    end
+                end
+            else
 
             %% Only used for numeric types
             byte_count_index = bitshift(bitand(header, 0b11100000), -5);
@@ -223,7 +278,7 @@ function data = read_value(fid)
                 N = double(N); % Avoid integer division
                 num_bytes = ceil(N / 8);
                 packed_bytes = fread(fid, num_bytes, '*uint8', 'l');
-                
+
                 % Unpack the booleans from the bytes
                 data = false(N, 1);
                 for i = 1:N
@@ -231,7 +286,11 @@ function data = read_value(fid)
                     bit_position = mod(i-1, 8);
                     data(i) = bitand(bitshift(packed_bytes(byte_index), -bit_position), 1) == 1;
                 end
+            else
+                error('Unknown typed array sub-type: %d', sub_type);
             end
+
+            end % is_aligned else
 
         case 5 % untyped array
             N = read_compressed(fid);
