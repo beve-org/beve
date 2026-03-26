@@ -1,5 +1,5 @@
 # BEVE - Binary Efficient Versatile Encoding
-Version 1.1
+Version 1
 
 *High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.*
 

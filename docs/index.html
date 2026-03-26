@@ -44,7 +44,7 @@
         <div class="container">
             <h1>BEVE</h1>
             <p class="subtitle">Binary Efficient Versatile Encoding</p>
-            <p class="version">Version 1.0</p>
+            <p class="version">Version 1</p>
             <p class="tagline">High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.</p>
             <div class="cta-buttons">
                 <a href="#specification" class="btn btn-primary">Read Specification</a>
@@ -350,11 +350,12 @@ uint128_t     0b100'10'001</code></pre>
             <pre><code class="language-cpp">0 -&gt; floating point
 1 -&gt; signed integer
 2 -&gt; unsigned integer
-3 -&gt; boolean or string</code></pre>
+3 -&gt; boolean, string, or aligned</code></pre>
             <p>For integral and floating point types, the next three bits of the type header are the BYTE COUNT.</p>
-            <p>For boolean or string types the next bit indicates whether the type is a boolean or a string:</p>
+            <p>For boolean or string types the next bit indicates whether the type is a boolean, string, or an aligned numeric array:</p>
             <pre><code class="language-cpp">0 -&gt; boolean // packed as single bits to the nearest byte
-1 -&gt; string // an array of strings (not an array of characters)</code></pre>
+1 -&gt; string // an array of strings (not an array of characters)
+2 -&gt; aligned // zero-copy aligned numeric array</code></pre>
             <p>Layout: <code>HEADER | SIZE | data</code></p>
 
             <h5>Boolean Arrays</h5>
@@ -374,6 +375,25 @@ uint128_t     0b100'10'001</code></pre>
             <h5>String Arrays</h5>
             <p>String arrays do not include the string HEADER for each element.</p>
             <p>Layout: <code>HEADER | SIZE | string[0] | ... string[N]</code></p>
+
+            <h5>Aligned Typed Arrays</h5>
+            <p>Aligned typed arrays enable zero-copy access by padding the data payload to the element type's natural alignment. The message buffer must be aligned to at least the maximum element alignment in the message.</p>
+            <p>Layout: <code>HEADER | NUMERIC_HEADER | SIZE | PADDING_LENGTH | PADDING | DATA</code></p>
+            <ul>
+                <li><code>HEADER</code> — 1 byte (<code>0x5C</code>), typed array with category 3, sub-type 2.</li>
+                <li><code>NUMERIC_HEADER</code> — 1 byte, a standard numeric typed array header encoding the element category (bits 3–4: 0=float, 1=signed, 2=unsigned) and BYTE COUNT (bits 5–7). Bits 0–2 must be <code>0b100</code>.</li>
+                <li><code>SIZE</code> — compressed unsigned integer, element count.</li>
+                <li><code>PADDING_LENGTH</code> — 1 byte, number of padding bytes that follow (0 to <code>alignment - 1</code>).</li>
+                <li><code>PADDING</code> — <code>PADDING_LENGTH</code> bytes (contents unspecified, must be ignored by decoders).</li>
+                <li><code>DATA</code> — raw element data, aligned to <code>alignof(T)</code>.</li>
+            </ul>
+            <p>The encoder computes padding as:</p>
+            <pre><code class="language-text">padding = (alignment - (offset_after_padding_length % alignment)) % alignment</code></pre>
+            <p>where <code>offset_after_padding_length</code> is the byte offset from the start of the message buffer.</p>
+            <p>Aligned typed arrays must only encode numeric types. Boolean and string sub-types must not be used.</p>
+            <div class="note">
+                <p>Extensions that embed typed arrays (matrices, complex numbers) gain zero-copy support automatically by using an aligned typed array as the inner value.</p>
+            </div>
 
             <h4>5 - Generic Array</h4>
             <p>Generic arrays expect elements to have headers.</p>
