@@ -350,13 +350,13 @@ function data = read_complex(fid)
                 else
                     switch byte_count
                         case 1
-                            raw = fread(fid, N, '*uint8', 'l');
+                            raw = fread(fid, [2, N], '*uint8', 'l');
                         case 2
-                            raw = fread(fid, N, '*uint16', 'l');
+                            raw = fread(fid, [2, N], '*uint16', 'l');
                         case 4
-                            raw = fread(fid, N, '*uint32', 'l');
+                            raw = fread(fid, [2, N], '*uint32', 'l');
                         case 8
-                            raw = fread(fid, N, '*uint64', 'l');
+                            raw = fread(fid, [2, N], '*uint64', 'l');
                     end
                 end
                 data = complex(raw(1, :), raw(2, :)); % remap to complex
