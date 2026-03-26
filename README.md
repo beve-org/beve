@@ -1,5 +1,5 @@
 # BEVE - Binary Efficient Versatile Encoding
-Version 1.0
+Version 1.1
 
 *High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.*
 
@@ -199,16 +199,17 @@ The next two bits indicate the type stored in the array:
 0 -> floating point
 1 -> signed integer
 2 -> unsigned integer
-3 -> boolean or string
+3 -> boolean, string, or aligned
 ```
 
 For integral and floating point types, the next three bits of the type header are the BYTE COUNT.
 
-For boolean or string types the next bit indicates whether the type is a boolean or a string
+For boolean or string types the next bit indicates whether the type is a boolean, string, or an aligned numeric array
 
 ```c++
 0 -> boolean // packed as single bits to the nearest byte
 1 -> string // an array of strings (not an array of characters)
+2 -> aligned // zero-copy aligned numeric array
 ```
 
 Layout: `HEADER | SIZE | data`
@@ -236,6 +237,31 @@ Examples
 String arrays do not include the string HEADER for each element.
 
 Layout: `HEADER | SIZE | string[0] | ... string[N]`
+
+### Aligned Typed Arrays
+
+Aligned typed arrays enable zero-copy access by padding the data payload to the element type's natural alignment. The message buffer must be aligned to at least the maximum element alignment in the message.
+
+Layout: `HEADER | NUMERIC_HEADER | SIZE | PADDING_LENGTH | PADDING | DATA`
+
+- `HEADER` — 1 byte (`0x5C`), typed array with category 3, sub-type 2.
+- `NUMERIC_HEADER` — 1 byte, a standard numeric typed array header encoding the element category (bits 3–4: 0=float, 1=signed, 2=unsigned) and BYTE COUNT (bits 5–7). Bits 0–2 must be `0b100`.
+- `SIZE` — compressed unsigned integer, element count.
+- `PADDING_LENGTH` — 1 byte, number of padding bytes that follow (0 to `alignment - 1`).
+- `PADDING` — `PADDING_LENGTH` bytes (contents unspecified, must be ignored by decoders).
+- `DATA` — raw element data, aligned to `alignof(T)`.
+
+The encoder computes padding as:
+
+```
+padding = (alignment - (offset_after_padding_length % alignment)) % alignment
+```
+
+where `offset_after_padding_length` is the byte offset from the start of the message buffer.
+
+Aligned typed arrays must only encode numeric types. Boolean and string sub-types must not be used.
+
+> Extensions that embed typed arrays (matrices, complex numbers) gain zero-copy support automatically by using an aligned typed array as the inner value.
 
 ## 5 - Generic Array
 
