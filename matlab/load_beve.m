@@ -384,7 +384,31 @@ function data = read_complex(fid)
         case 1 % complex array
             % Read the N of the array
             N = read_compressed(fid);
-    
+
+            if N == 0
+                if is_float
+                    switch byte_count
+                        case 4, data = complex(zeros(1,0,'single'));
+                        case 8, data = complex(zeros(1,0,'double'));
+                    end
+                elseif is_signed
+                    switch byte_count
+                        case 1, data = complex(zeros(1,0,'int8'));
+                        case 2, data = complex(zeros(1,0,'int16'));
+                        case 4, data = complex(zeros(1,0,'int32'));
+                        case 8, data = complex(zeros(1,0,'int64'));
+                    end
+                else
+                    switch byte_count
+                        case 1, data = complex(zeros(1,0,'uint8'));
+                        case 2, data = complex(zeros(1,0,'uint16'));
+                        case 4, data = complex(zeros(1,0,'uint32'));
+                        case 8, data = complex(zeros(1,0,'uint64'));
+                    end
+                end
+                return;
+            end
+
             if is_float
                 switch byte_count
                     case 4
