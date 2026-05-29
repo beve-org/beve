@@ -1,6 +1,19 @@
 const beve = require('./beve.js');
 const fs = require('fs');
 const path = require('path');
+const { describe, test } = require('node:test');
+const assert = require('node:assert');
+
+// node:assert has no tolerance-based comparison, so the round-trip tests that
+// compare floating-point values use this helper. Mirrors the decimal-precision
+// semantics the suite relies on (default: agreement to 2 decimal places).
+function assertClose(actual, expected, precision = 2) {
+    const tolerance = Math.pow(10, -precision) / 2;
+    assert.ok(
+        Math.abs(expected - actual) < tolerance,
+        `expected ${actual} to be close to ${expected} (precision ${precision})`
+    );
+}
 
 // Helper to get actual buffer from over-allocated write buffer
 function getActualBuffer(encoded) {
@@ -31,91 +44,91 @@ describe('BEVE JavaScript Library', () => {
     describe('Primitive Types', () => {
 
         test('boolean true', () => {
-            expect(roundTrip(true)).toBe(true);
+            assert.strictEqual(roundTrip(true), true);
         });
 
         test('boolean false', () => {
-            expect(roundTrip(false)).toBe(false);
+            assert.strictEqual(roundTrip(false), false);
         });
 
         test('integer zero', () => {
-            expect(roundTrip(0)).toBe(0);
+            assert.strictEqual(roundTrip(0), 0);
         });
 
         test('positive integer', () => {
-            expect(roundTrip(42)).toBe(42);
+            assert.strictEqual(roundTrip(42), 42);
         });
 
         test('negative integer', () => {
-            expect(roundTrip(-42)).toBe(-42);
+            assert.strictEqual(roundTrip(-42), -42);
         });
 
         test('large positive integer', () => {
-            expect(roundTrip(1000000)).toBe(1000000);
+            assert.strictEqual(roundTrip(1000000), 1000000);
         });
 
         test('large negative integer', () => {
-            expect(roundTrip(-1000000)).toBe(-1000000);
+            assert.strictEqual(roundTrip(-1000000), -1000000);
         });
 
         test('floating point number', () => {
-            expect(roundTrip(3.14159)).toBeCloseTo(3.14159);
+            assertClose(roundTrip(3.14159), 3.14159);
         });
 
         test('negative floating point', () => {
-            expect(roundTrip(-2.71828)).toBeCloseTo(-2.71828);
+            assertClose(roundTrip(-2.71828), -2.71828);
         });
 
         test('very small floating point', () => {
-            expect(roundTrip(0.000001)).toBeCloseTo(0.000001);
+            assertClose(roundTrip(0.000001), 0.000001);
         });
 
         test('large floating point', () => {
             // Use a clear non-integer to ensure it's encoded as float64
-            expect(roundTrip(1234567890.123456)).toBeCloseTo(1234567890.123456);
+            assertClose(roundTrip(1234567890.123456), 1234567890.123456);
         });
     });
 
     describe('Null and Undefined Handling (Issue #7)', () => {
 
         test('null value', () => {
-            expect(roundTrip(null)).toBe(null);
+            assert.strictEqual(roundTrip(null), null);
         });
 
         test('undefined converts to null', () => {
-            expect(roundTrip(undefined)).toBe(null);
+            assert.strictEqual(roundTrip(undefined), null);
         });
 
         test('object with null value', () => {
             const input = { value: null };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with undefined value is omitted', () => {
             const input = { defined: 'yes', notDefined: undefined };
             const expected = { defined: 'yes' };
-            expect(roundTrip(input)).toEqual(expected);
+            assert.deepStrictEqual(roundTrip(input), expected);
         });
 
         test('object with only undefined values becomes empty', () => {
             const input = { a: undefined, b: undefined };
-            expect(roundTrip(input)).toEqual({});
+            assert.deepStrictEqual(roundTrip(input), {});
         });
 
         test('array with null elements', () => {
             const input = [1, null, 3];
-            expect(roundTrip(input)).toEqual([1, null, 3]);
+            assert.deepStrictEqual(roundTrip(input), [1, null, 3]);
         });
 
         test('array with undefined elements converts to null', () => {
             const input = [1, undefined, 3];
             const expected = [1, null, 3];
-            expect(roundTrip(input)).toEqual(expected);
+            assert.deepStrictEqual(roundTrip(input), expected);
         });
 
         test('nested object with null', () => {
             const input = { outer: { inner: null } };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('mixed null and undefined in object', () => {
@@ -128,30 +141,30 @@ describe('BEVE JavaScript Library', () => {
                 present: 'value',
                 isNull: null
             };
-            expect(roundTrip(input)).toEqual(expected);
+            assert.deepStrictEqual(roundTrip(input), expected);
         });
     });
 
     describe('String Handling', () => {
 
         test('empty string', () => {
-            expect(roundTrip('')).toBe('');
+            assert.strictEqual(roundTrip(''), '');
         });
 
         test('single character', () => {
-            expect(roundTrip('a')).toBe('a');
+            assert.strictEqual(roundTrip('a'), 'a');
         });
 
         test('short string', () => {
-            expect(roundTrip('hello')).toBe('hello');
+            assert.strictEqual(roundTrip('hello'), 'hello');
         });
 
         test('string with spaces', () => {
-            expect(roundTrip('hello world')).toBe('hello world');
+            assert.strictEqual(roundTrip('hello world'), 'hello world');
         });
 
         test('string with special characters', () => {
-            expect(roundTrip('hello\nworld\ttab')).toBe('hello\nworld\ttab');
+            assert.strictEqual(roundTrip('hello\nworld\ttab'), 'hello\nworld\ttab');
         });
     });
 
@@ -159,52 +172,52 @@ describe('BEVE JavaScript Library', () => {
 
         test('62-character string (boundary - 2)', () => {
             const input = 'A'.repeat(62);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('63-character string (boundary - 1)', () => {
             const input = 'A'.repeat(63);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('64-character string (boundary)', () => {
             const input = 'A'.repeat(64);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('65-character string (boundary + 1)', () => {
             const input = 'A'.repeat(65);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('100-character string', () => {
             const input = 'A'.repeat(100);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('127-character string (from bug report)', () => {
             const input = 'A'.repeat(127);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('500-character string', () => {
             const input = 'A'.repeat(500);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('1000-character string', () => {
             const input = 'A'.repeat(1000);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('16383-character string (4-byte boundary - 1)', () => {
             const input = 'A'.repeat(16383);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('16384-character string (4-byte boundary)', () => {
             const input = 'A'.repeat(16384);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
     });
 
@@ -212,66 +225,66 @@ describe('BEVE JavaScript Library', () => {
 
         test('string with emoji (4-byte UTF-8)', () => {
             const input = 'Hello 😀 World';
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('emoji-only string', () => {
             const input = '😀😁😂🤣😃😄😅😆';
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('20 emojis (80 UTF-8 bytes, triggers 2-byte compressed)', () => {
             const input = '😀'.repeat(20);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('Chinese characters (3-byte UTF-8)', () => {
             const input = '你好世界';
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('mixed ASCII and multi-byte', () => {
             const input = 'Hello 你好 World 🌍';
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('string where char count != byte count at boundary', () => {
             // 21 characters but 63 bytes (21 * 3 for Chinese)
             const input = '中'.repeat(21);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('string where char count < 64 but byte count >= 64', () => {
             // 22 Chinese characters = 66 bytes, triggers 2-byte compressed
             const input = '中'.repeat(22);
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
     });
 
     describe('Objects', () => {
 
         test('empty object', () => {
-            expect(roundTrip({})).toEqual({});
+            assert.deepStrictEqual(roundTrip({}), {});
         });
 
         test('simple object with string value', () => {
             const input = { name: 'test' };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with number value', () => {
             const input = { count: 42 };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with boolean value', () => {
             const input = { active: true };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with multiple fields', () => {
             const input = { name: 'test', count: 42, active: true };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('nested object', () => {
@@ -280,7 +293,7 @@ describe('BEVE JavaScript Library', () => {
                     inner: 'value'
                 }
             };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('deeply nested object', () => {
@@ -293,7 +306,7 @@ describe('BEVE JavaScript Library', () => {
                     }
                 }
             };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
     });
 
@@ -303,31 +316,31 @@ describe('BEVE JavaScript Library', () => {
             const key = 'k'.repeat(63);
             const input = {};
             input[key] = 'value';
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with 64-char key', () => {
             const key = 'k'.repeat(64);
             const input = {};
             input[key] = 'value';
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with 65-char key', () => {
             const key = 'k'.repeat(65);
             const input = {};
             input[key] = 'value';
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with UTF-8 key', () => {
             const input = { '你好': 'world' };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with emoji key', () => {
             const input = { '😀': 'smile' };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
     });
 
@@ -335,12 +348,12 @@ describe('BEVE JavaScript Library', () => {
 
         test('object with 64-char string field', () => {
             const input = { content: 'A'.repeat(64) };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with 127-char string field (bug report case)', () => {
             const input = { content: 'A'.repeat(127) };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with multiple long string fields', () => {
@@ -349,7 +362,7 @@ describe('BEVE JavaScript Library', () => {
                 field2: 'B'.repeat(100),
                 field3: 'C'.repeat(100)
             };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('mixed content like bug report', () => {
@@ -358,7 +371,7 @@ describe('BEVE JavaScript Library', () => {
                 createdAt: 'Sun Jan 14 2024',
                 id: 12345
             };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
     });
 
@@ -366,25 +379,25 @@ describe('BEVE JavaScript Library', () => {
 
         test('integer array', () => {
             const input = [1, 2, 3, 4, 5];
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('float array', () => {
             const input = [1.1, 2.2, 3.3, 4.4, 5.5];
             const result = roundTrip(input);
             for (let i = 0; i < input.length; i++) {
-                expect(result[i]).toBeCloseTo(input[i]);
+                assertClose(result[i], input[i]);
             }
         });
 
         test('large integer array', () => {
             const input = Array.from({ length: 100 }, (_, i) => i);
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('array with negative integers', () => {
             const input = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
     });
 
@@ -392,23 +405,23 @@ describe('BEVE JavaScript Library', () => {
 
         test('single element array', () => {
             const input = ['single'];
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('mixed type array', () => {
             const input = ['string', 42, true, false];
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('array of objects', () => {
             const input = [{ a: 1 }, { b: 2 }];
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('nested arrays', () => {
             // Note: nested arrays may be treated as typed if inner arrays are numeric
             const input = [['a', 'b'], ['c', 'd']];
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
     });
 
@@ -416,27 +429,27 @@ describe('BEVE JavaScript Library', () => {
 
         test('object with empty string value', () => {
             const input = { empty: '' };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with zero value', () => {
             const input = { zero: 0 };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('object with false value', () => {
             const input = { flag: false };
-            expect(roundTrip(input)).toEqual(input);
+            assert.deepStrictEqual(roundTrip(input), input);
         });
 
         test('string with null character', () => {
             const input = 'hello\0world';
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
 
         test('unicode string with surrogate pairs', () => {
             const input = '𝟙𝟚𝟛'; // Mathematical bold digits (4-byte UTF-8 each)
-            expect(roundTrip(input)).toBe(input);
+            assert.strictEqual(roundTrip(input), input);
         });
     });
 
@@ -451,7 +464,7 @@ describe('BEVE JavaScript Library', () => {
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40, // 3.0
             ]);
             const result = beve.read_beve(buf);
-            expect(result).toEqual([1.0, 2.0, 3.0]);
+            assert.deepStrictEqual(result, [1.0, 2.0, 3.0]);
         });
 
         test('aligned int32 array [10, 20, 30]', () => {
@@ -462,7 +475,7 @@ describe('BEVE JavaScript Library', () => {
                 0x1E, 0x00, 0x00, 0x00, // 30
             ]);
             const result = beve.read_beve(buf);
-            expect(result).toEqual([10, 20, 30]);
+            assert.deepStrictEqual(result, [10, 20, 30]);
         });
 
         test('aligned uint16 array [100, 200, 300]', () => {
@@ -473,7 +486,7 @@ describe('BEVE JavaScript Library', () => {
                 0x2C, 0x01,             // 300
             ]);
             const result = beve.read_beve(buf);
-            expect(result).toEqual([100, 200, 300]);
+            assert.deepStrictEqual(result, [100, 200, 300]);
         });
 
         test('aligned float64 array from example file', () => {
@@ -481,7 +494,7 @@ describe('BEVE JavaScript Library', () => {
             if (fs.existsSync(filePath)) {
                 const buffer = fs.readFileSync(filePath);
                 const data = beve.read_beve(new Uint8Array(buffer));
-                expect(data).toEqual([1.0, 2.0, 3.0]);
+                assert.deepStrictEqual(data, [1.0, 2.0, 3.0]);
             }
         });
 
@@ -490,7 +503,7 @@ describe('BEVE JavaScript Library', () => {
             if (fs.existsSync(filePath)) {
                 const buffer = fs.readFileSync(filePath);
                 const data = beve.read_beve(new Uint8Array(buffer));
-                expect(data).toEqual([10, 20, 30]);
+                assert.deepStrictEqual(data, [10, 20, 30]);
             }
         });
 
@@ -504,8 +517,8 @@ describe('BEVE JavaScript Library', () => {
                 0x00, 0x00, 0x00, 0x40, // 2.0f
             ]);
             const result = beve.read_beve(buf);
-            expect(result[0]).toBeCloseTo(1.0);
-            expect(result[1]).toBeCloseTo(2.0);
+            assertClose(result[0], 1.0);
+            assertClose(result[1], 2.0);
         });
 
         test('aligned int8 array (no alignment needed)', () => {
@@ -514,7 +527,7 @@ describe('BEVE JavaScript Library', () => {
                 0x01, 0x02, 0x03, 0x04, // 1, 2, 3, 4
             ]);
             const result = beve.read_beve(buf);
-            expect(result).toEqual([1, 2, 3, 4]);
+            assert.deepStrictEqual(result, [1, 2, 3, 4]);
         });
     });
 
@@ -526,8 +539,8 @@ describe('BEVE JavaScript Library', () => {
             if (fs.existsSync(filePath)) {
                 const buffer = fs.readFileSync(filePath);
                 const data = beve.read_beve(new Uint8Array(buffer));
-                expect(data).toBeDefined();
-                expect(typeof data).toBe('object');
+                assert.notStrictEqual(data, undefined);
+                assert.strictEqual(typeof data, 'object');
             }
         });
 
@@ -536,8 +549,8 @@ describe('BEVE JavaScript Library', () => {
             if (fs.existsSync(filePath)) {
                 const buffer = fs.readFileSync(filePath);
                 const data = beve.read_beve(new Uint8Array(buffer));
-                expect(data).toBeDefined();
-                expect(typeof data).toBe('object');
+                assert.notStrictEqual(data, undefined);
+                assert.strictEqual(typeof data, 'object');
             }
         });
 
@@ -546,9 +559,9 @@ describe('BEVE JavaScript Library', () => {
             if (fs.existsSync(filePath)) {
                 const buffer = fs.readFileSync(filePath);
                 const data = beve.read_beve(new Uint8Array(buffer));
-                expect(data).toBeDefined();
-                expect(data.values).toBeDefined();
-                expect(Array.isArray(data.values)).toBe(true);
+                assert.notStrictEqual(data, undefined);
+                assert.notStrictEqual(data.values, undefined);
+                assert.strictEqual(Array.isArray(data.values), true);
             }
         });
 
@@ -557,9 +570,9 @@ describe('BEVE JavaScript Library', () => {
             if (fs.existsSync(filePath)) {
                 const buffer = fs.readFileSync(filePath);
                 const data = beve.read_beve(new Uint8Array(buffer));
-                expect(data).toBeDefined();
-                expect(data.values).toBeDefined();
-                expect(Array.isArray(data.values)).toBe(true);
+                assert.notStrictEqual(data, undefined);
+                assert.notStrictEqual(data.values, undefined);
+                assert.strictEqual(Array.isArray(data.values), true);
             }
         });
 
@@ -568,10 +581,10 @@ describe('BEVE JavaScript Library', () => {
             if (fs.existsSync(filePath)) {
                 const buffer = fs.readFileSync(filePath);
                 const data = beve.read_beve(new Uint8Array(buffer));
-                expect(data).toBeDefined();
-                expect(data.values).toBeDefined();
-                expect(Array.isArray(data.values)).toBe(true);
-                expect(data.values).toEqual(['cat', 'dog', 'elephant']);
+                assert.notStrictEqual(data, undefined);
+                assert.notStrictEqual(data.values, undefined);
+                assert.strictEqual(Array.isArray(data.values), true);
+                assert.deepStrictEqual(data.values, ['cat', 'dog', 'elephant']);
             }
         });
 
@@ -580,9 +593,9 @@ describe('BEVE JavaScript Library', () => {
             if (fs.existsSync(filePath)) {
                 const buffer = fs.readFileSync(filePath);
                 const data = beve.read_beve(new Uint8Array(buffer));
-                expect(data).toBeDefined();
-                expect(data.values).toBeDefined();
-                expect(Array.isArray(data.values)).toBe(true);
+                assert.notStrictEqual(data, undefined);
+                assert.notStrictEqual(data.values, undefined);
+                assert.strictEqual(Array.isArray(data.values), true);
             }
         });
     });
@@ -596,9 +609,9 @@ describe('BEVE JavaScript Library', () => {
                 count: 42
             };
             const result = roundTrip(input);
-            expect(result.content).toBe(input.content);
-            expect(result.name).toBe(input.name);
-            expect(result.count).toBe(input.count);
+            assert.strictEqual(result.content, input.content);
+            assert.strictEqual(result.name, input.name);
+            assert.strictEqual(result.count, input.count);
         });
 
         test('Issue #9: no spurious empty key appears', () => {
@@ -607,16 +620,16 @@ describe('BEVE JavaScript Library', () => {
                 name: 'test'
             };
             const result = roundTrip(input);
-            expect(Object.keys(result)).toEqual(Object.keys(input));
-            expect(result['']).toBeUndefined();
+            assert.deepStrictEqual(Object.keys(result), Object.keys(input));
+            assert.strictEqual(result[''], undefined);
         });
 
         test('Issue #9: string content is not truncated or corrupted', () => {
             const content = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.';
             const input = { content };
             const result = roundTrip(input);
-            expect(result.content.length).toBe(content.length);
-            expect(result.content).toBe(content);
+            assert.strictEqual(result.content.length, content.length);
+            assert.strictEqual(result.content, content);
         });
     });
 });
