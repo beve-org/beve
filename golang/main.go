@@ -352,8 +352,8 @@ func (b *Beve) readValue() (interface{}, error) {
 	case 6: // extensions
 		extension := (header & 0b11111000) >> 3
 		switch extension {
-		case 1: // variants
-			_ = b.readCompressed() // Skip variant tag
+		case 1: // variants (deprecated in v2 - read for backward compatibility with v1 data)
+			_ = b.readCompressed() // Skip the legacy type tag
 			return b.readValue()
 		case 2: // matrices
 			layout := b.buffer[b.cursor] & 0b00000001

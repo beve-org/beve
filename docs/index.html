@@ -44,7 +44,7 @@
         <div class="container">
             <h1>BEVE</h1>
             <p class="subtitle">Binary Efficient Versatile Encoding</p>
-            <p class="version">Version 1</p>
+            <p class="version">Version 2</p>
             <p class="tagline">High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.</p>
             <div class="cta-buttons">
                 <a href="#specification" class="btn btn-primary">Read Specification</a>
@@ -401,9 +401,9 @@ uint128_t     0b100'10'001</code></pre>
 
             <h3>6 - Extensions</h3>
             <p>Extensions are considered to be a formal part of the BEVE specification, but are not expected to be as broadly implemented.</p>
-            <p>Following the first three HEADER bits, the next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specialized use cases, such as variants, matrices, and complex numbers.</p>
+            <p>Following the first three HEADER bits, the next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specialized use cases, such as matrices and complex numbers.</p>
             <pre><code class="language-cpp">0 -&gt; data delimiter // for specs like Newline Delimited JSON
-1 -&gt; type tag // for variant like structures
+1 -&gt; type tag       // deprecated in Version 2 (see below); variants are ordinary objects
 2 -&gt; matrices
 3 -&gt; complex numbers</code></pre>
 
@@ -411,16 +411,18 @@ uint128_t     0b100'10'001</code></pre>
             <p>Used to separate chunks of data to match specifications like <a href="http://ndjson.org" target="_blank">NDJSON</a>.</p>
             <p>When converted to JSON this should add a new line (<code>'\n'</code>) character to the JSON.</p>
 
-            <h4>1 - Type Tag (Variants)</h4>
-            <p>Expects a subsequent compressed unsigned integer to denote a type tag. A compressed SIZE indicator is used to efficiently store the tag.</p>
-            <p>Layout: <code>HEADER | SIZE (i.e. type tag) | VALUE</code></p>
-            <p>The converted JSON format should look like:</p>
+            <h4>1 - Type Tag (Variants) — Deprecated</h4>
+            <div class="note">
+                <p><strong>Deprecated in Version 2.</strong> The type tag stored a variant as a positional integer index into an external list of types. Unlike every other BEVE construct, that index is not self-describing: it cannot be interpreted without the schema that defines the type ordering. Version 2 removes this special case and represents variant-like structures as ordinary objects instead.</p>
+            </div>
+            <p>Extension ID <code>1</code> is <strong>reserved</strong> and must not be reused. Encoders targeting Version 2 <strong>must not</strong> emit the type tag extension. Decoders <strong>should</strong> continue to read it when decoding Version 1 data, for backward compatibility.</p>
+            <p><strong>Variants in Version 2.</strong> A variant is represented as an ordinary BEVE value, chosen exactly as it would be for JSON. BEVE imposes no discriminator convention; applications typically use a named tag field, such as <code>{"type": "circle", "radius": 5}</code> (internally tagged) or <code>{"type": "circle", "value": ...}</code> (adjacently tagged), matching whatever convention they already use for JSON. Because the result is a plain object, it needs no special decoder support and is as self-describing as any other BEVE value.</p>
+            <p><strong>Legacy layout (Version 1, for decoders).</strong> <code>HEADER | SIZE (i.e. type tag) | VALUE</code>, where <code>SIZE</code> is a compressed unsigned integer type tag and <code>VALUE</code> is any BEVE value. When converting legacy data to JSON, the historical mapping was:</p>
             <pre><code class="language-json">{
   "index": 0,
   "value": "the JSON value"
 }</code></pre>
-            <p>The <code>"index"</code> should refer to an array of types, from zero to one less than the count of types.</p>
-            <p>The <code>"value"</code> is any JSON value.</p>
+            <p>The <code>"index"</code> referred to an array of types, from zero to one less than the count of types, and <code>"value"</code> was any JSON value.</p>
 
             <h4>2 - Matrices</h4>
             <p>Matrices can be stored as object or array types. However, this tag provides a more compact mechanism to introspect matrices.</p>
