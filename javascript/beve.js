@@ -259,8 +259,8 @@
                     {
                         const extension = (header & 0b11111000) >> 3;
                         switch (extension) {
-                            case 1: // variants
-                                read_compressed(); // Skipping variant tag
+                            case 1: // variants (deprecated in v2 - read for backward compatibility with v1 data)
+                                read_compressed(); // Skip the legacy type tag
                                 return read_value();
                             case 2: // matrices
                                 const layout = buffer[cursor++] & 0b00000001;

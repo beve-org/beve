@@ -224,8 +224,8 @@ function read_value(fid) {
             {
                 const extension = (header[0] & 0b11111000) >> 3;
                 switch (extension) {
-                    case 1: // variants
-                        read_compressed(fid); // Skipping variant tag
+                    case 1: // variants (deprecated in v2 - read for backward compatibility with v1 data)
+                        read_compressed(fid); // Skip the legacy type tag
                         return read_value(fid);
                     case 2: // matrices
                         const layout = fs.readSync(fid, Buffer.alloc(1), 0, 1, null)[0] & 0b00000001;

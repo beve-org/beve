@@ -1,9 +1,11 @@
 # BEVE - Binary Efficient Versatile Encoding
-Version 1
+Version 2
 
 *High performance, tagged binary data specification like JSON, MessagePack, CBOR, etc. But, designed for higher performance and scientific computing.*
 
 > See [Discussions](https://github.com/stephenberry/eve/discussions) for polls and active development on the specification.
+
+> **Version 2** deprecates the type tag extension (Extension 1). Variant-like structures are represented as ordinary objects rather than a positional index. See [6 - Extensions](#6---extensions).
 
 - Maps to and from JSON
 - Schema less, fully described, like JSON (can be used in documents)
@@ -273,11 +275,11 @@ Layout: `HEADER | SIZE | VALUE[0] | ... VALUE[N]`
 
 Extensions are considered to be a formal part of the BEVE specification, but are not expected to be as broadly implemented.
 
-Following the first three HEADER bits, the next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specialized use cases, such as variants, matrices, and complex numbers.
+Following the first three HEADER bits, the next five bits denote various extensions. These extensions are not expected to be implemented in every parser/serializer, but they provide convenient binary storage for more specialized use cases, such as matrices and complex numbers.
 
 ```c++
 0 -> data delimiter // for specs like Newline Delimited JSON
-1 -> type tag // for variant like structures
+1 -> type tag       // deprecated in Version 2 (see below); variants are ordinary objects
 2 -> matrices
 3 -> complex numbers
 ```
@@ -288,13 +290,15 @@ Used to separate chunks of data to match specifications like [NDJSON](http://ndj
 
 When converted to JSON this should add a new line (`'\n'`) character to the JSON.
 
-### 1 - Type Tag (Variants)
+### 1 - Type Tag (Variants) — Deprecated
 
-Expects a subsequent compressed unsigned integer to denote a type tag. A compressed SIZE indicator is used to efficiently store the tag.
+> **Deprecated in Version 2.** The type tag stored a variant as a positional integer index into an external list of types. Unlike every other BEVE construct, that index is not self-describing: it cannot be interpreted without the schema that defines the type ordering. Version 2 removes this special case and represents variant-like structures as ordinary objects instead.
 
-Layout : `HEADER | SIZE (i.e. type tag) | VALUE`
+Extension ID `1` is **reserved** and must not be reused. Encoders targeting Version 2 **must not** emit the type tag extension. Decoders **should** continue to read it when decoding Version 1 data, for backward compatibility.
 
-The converted JSON format should look like:
+**Variants in Version 2.** A variant is represented as an ordinary BEVE value, chosen exactly as it would be for JSON. BEVE imposes no discriminator convention; applications typically use a named tag field, such as `{"type": "circle", "radius": 5}` (internally tagged) or `{"type": "circle", "value": ...}` (adjacently tagged), matching whatever convention they already use for JSON. Because the result is a plain object, it needs no special decoder support and is as self-describing as any other BEVE value.
+
+**Legacy layout (Version 1, for decoders).** `HEADER | SIZE (i.e. type tag) | VALUE`, where `SIZE` is a compressed unsigned integer type tag and `VALUE` is any BEVE value. When converting legacy data to JSON, the historical mapping was:
 
 ```json
 {
@@ -303,9 +307,7 @@ The converted JSON format should look like:
 }
 ```
 
-The `"index"` should refer to an array of types, from zero to one less than the count of types.
-
-The `"value"` is any JSON value.
+The `"index"` referred to an array of types, from zero to one less than the count of types, and `"value"` was any JSON value.
 
 ### 2 - Matrices
 

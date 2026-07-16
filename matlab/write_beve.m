@@ -177,10 +177,10 @@ function write_value(fid, value)
     elseif isstring(value) && length(value) == 1
         % Handle single MATLAB string (convert to char)
         write_value(fid, char(value));
-    elseif isstruct(value) && isfield(value, 'tag') && isfield(value, 'value') && numel(fieldnames(value)) == 2
-        % Handle variant (Extension 1 - Type Tag)
-        write_variant(fid, value.tag, value.value);
     elseif isstruct(value)
+        % Structs (including variant-style {tag, value} structs) serialize as
+        % ordinary objects. The Version 1 type tag extension for variants is
+        % deprecated and is no longer emitted.
         header = uint8(3);
         key_type = 0;  % Assuming keys are always strings
         header = bitor(header, bitshift(key_type, 3));
@@ -197,19 +197,6 @@ function write_value(fid, value)
     else
         error('Unsupported data type: %s', class(value));
     end
-end
-
-function write_variant(fid, tag, value)
-    % Write a variant (Extension 1 - Type Tag)
-    header = uint8(6);  % Type 6 = extensions
-    header = bitor(header, bitshift(1, 3));  % Extension 1 = type tag (variant)
-    write_byte(fid, header);
-    
-    % Write the type tag as a compressed unsigned integer
-    write_compressed(fid, tag);
-    
-    % Write the value
-    write_value(fid, value);
 end
 
 function write_complex(fid, value)

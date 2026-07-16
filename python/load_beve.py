@@ -140,7 +140,7 @@ def load_beve(filename):
                 data.append(read_value(fid))
         elif type_val == 6:  # extensions
             extension = np.bitwise_and(header, 0b11111000) >> 3
-            if extension == 1: # variants
+            if extension == 1: # variants (deprecated in v2 - read for backward compatibility with v1 data)
                 read_compressed(fid)
                 data = read_value(fid)
             elif extension == 2:  # matrices
