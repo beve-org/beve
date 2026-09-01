@@ -1,11 +1,11 @@
 # BEVE Proposal: Aligned Complex Arrays
 
-**Status:** Working Draft
+**Status:** Adopted
 **Targets:** BEVE Version 2
 
 ## Motivation
 
-The [Aligned Typed Arrays proposal](adopted/Aligned%20Typed%20Arrays%20Proposal.md) gave BEVE zero-copy numeric payloads, and claimed that extensions embedding a typed array — matrices and complex numbers — would gain that support for free. That claim holds for matrices and does not hold for complex numbers.
+The [Aligned Typed Arrays proposal](Aligned%20Typed%20Arrays%20Proposal.md) gave BEVE zero-copy numeric payloads, and claimed that extensions embedding a typed array — matrices and complex numbers — would gain that support for free. That claim holds for matrices and does not hold for complex numbers.
 
 A matrix is:
 

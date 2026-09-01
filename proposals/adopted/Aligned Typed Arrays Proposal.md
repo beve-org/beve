@@ -1,6 +1,6 @@
 # BEVE Proposal: Aligned Typed Arrays for Zero-Copy Access
 
-**Status:** Working Draft
+**Status:** Adopted
 
 ## Motivation
 
@@ -167,7 +167,7 @@ No changes to the matrix extension are required.
 
 ### Complex Numbers (Extension 3)
 
-> **Correction.** A complex array is `EXT(3) | COMPLEX_HEADER | SIZE | DATA` — raw data with no inner value slot — so an aligned typed array cannot be placed inside it as claimed here. Aligning complex payloads required a new complex sub-type; see the [Aligned Complex Arrays proposal](../Aligned%20Complex%20Arrays%20Proposal.md).
+> **Correction.** A complex array is `EXT(3) | COMPLEX_HEADER | SIZE | DATA` — raw data with no inner value slot — so an aligned typed array cannot be placed inside it as claimed here. Aligning complex payloads required a new complex sub-type; see the [Aligned Complex Arrays proposal](Aligned%20Complex%20Arrays%20Proposal.md).
 
 ## Nested / Multiple Aligned Arrays
 
