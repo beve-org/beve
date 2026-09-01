@@ -130,45 +130,7 @@
                                 }
                                 return array;
                             } else if (sub_type === 2) {
-                                // aligned typed array
-                                const numeric_header = buffer[cursor++];
-                                if ((numeric_header & 0b00000111) !== 0b100) {
-                                    throw new Error("Invalid aligned typed array numeric header");
-                                }
-                                const a_num_type = (numeric_header & 0b00011000) >> 3;
-                                if (a_num_type === 3) {
-                                    throw new Error("Aligned typed array numeric header must not encode boolean or string");
-                                }
-                                const a_byte_count = config[(numeric_header & 0b11100000) >> 5];
-                                const N = read_compressed();
-                                const padding_length = buffer[cursor++];
-                                if (cursor + padding_length > buffer.length) {
-                                    throw new Error("Aligned typed array padding extends past end of buffer");
-                                }
-                                cursor += padding_length;
-
-                                const array = new Array(N);
-                                if (a_num_type === 0) { // float
-                                    switch (a_byte_count) {
-                                        case 4: for (let i = 0; i < N; ++i) array[i] = readFloat(); break;
-                                        case 8: for (let i = 0; i < N; ++i) array[i] = readDouble(); break;
-                                    }
-                                } else if (a_num_type === 1) { // signed int
-                                    switch (a_byte_count) {
-                                        case 1: for (let i = 0; i < N; ++i) array[i] = readInt8(); break;
-                                        case 2: for (let i = 0; i < N; ++i) array[i] = readInt16(); break;
-                                        case 4: for (let i = 0; i < N; ++i) array[i] = readInt32(); break;
-                                        case 8: for (let i = 0; i < N; ++i) array[i] = readBigInt64(); break;
-                                    }
-                                } else { // unsigned int
-                                    switch (a_byte_count) {
-                                        case 1: for (let i = 0; i < N; ++i) array[i] = readUInt8(); break;
-                                        case 2: for (let i = 0; i < N; ++i) array[i] = readUInt16(); break;
-                                        case 4: for (let i = 0; i < N; ++i) array[i] = readUInt32(); break;
-                                        case 8: for (let i = 0; i < N; ++i) array[i] = readBigUInt64(); break;
-                                    }
-                                }
-                                return array;
+                                return read_aligned_typed_array().values;
                             } else if (sub_type === 0) {
                                 throw new Error("Boolean array support not implemented");
                             } else {
@@ -376,10 +338,66 @@
             }
         }
 
+        // Reads an aligned typed array whose typed array HEADER byte has already been
+        // consumed. Returns the element values alongside the NUMERIC_HEADER, so callers
+        // that wrap an aligned typed array (such as complex arrays) can validate it.
+        function read_aligned_typed_array() {
+            const config = [1, 2, 4, 8];
+            const numeric_header = buffer[cursor++];
+            if ((numeric_header & 0b00000111) !== 0b100) {
+                throw new Error("Invalid aligned typed array numeric header");
+            }
+            const num_type = (numeric_header & 0b00011000) >> 3;
+            if (num_type === 3) {
+                throw new Error("Aligned typed array numeric header must not encode boolean or string");
+            }
+            const byte_count = config[(numeric_header & 0b11100000) >> 5];
+            const N = read_compressed();
+            const padding_length = buffer[cursor++];
+            if (cursor + padding_length > buffer.length) {
+                throw new Error("Aligned typed array padding extends past end of buffer");
+            }
+            cursor += padding_length;
+
+            // Every branch must consume the payload. A byte count the branch cannot
+            // read would otherwise leave the cursor short of the payload and silently
+            // reinterpret it as whatever follows.
+            const unsupported = () => {
+                throw new Error("Unsupported aligned typed array element type: numeric header 0x" +
+                    numeric_header.toString(16));
+            };
+
+            const values = new Array(N);
+            if (num_type === 0) { // float
+                switch (byte_count) {
+                    case 4: for (let i = 0; i < N; ++i) values[i] = readFloat(); break;
+                    case 8: for (let i = 0; i < N; ++i) values[i] = readDouble(); break;
+                    default: unsupported();
+                }
+            } else if (num_type === 1) { // signed int
+                switch (byte_count) {
+                    case 1: for (let i = 0; i < N; ++i) values[i] = readInt8(); break;
+                    case 2: for (let i = 0; i < N; ++i) values[i] = readInt16(); break;
+                    case 4: for (let i = 0; i < N; ++i) values[i] = readInt32(); break;
+                    case 8: for (let i = 0; i < N; ++i) values[i] = readBigInt64(); break;
+                    default: unsupported();
+                }
+            } else { // unsigned int
+                switch (byte_count) {
+                    case 1: for (let i = 0; i < N; ++i) values[i] = readUInt8(); break;
+                    case 2: for (let i = 0; i < N; ++i) values[i] = readUInt16(); break;
+                    case 4: for (let i = 0; i < N; ++i) values[i] = readUInt32(); break;
+                    case 8: for (let i = 0; i < N; ++i) values[i] = readBigUInt64(); break;
+                    default: unsupported();
+                }
+            }
+            return { values, numeric_header };
+        }
+
         function read_complex_ext() {
             // COMPLEX HEADER
             const ch = buffer[cursor++];
-            const kind = ch & 0b00000111; // 0: single complex, 1: complex array
+            const kind = ch & 0b00000111; // 0: single complex, 1: complex array, 2: aligned complex array
             const num_type = (ch & 0b00011000) >> 3; // 0 float, 1 signed, 2 unsigned
             const bc_idx = (ch & 0b11100000) >> 5;  // byte count index
             const bc_map = [1, 2, 4, 8];
@@ -409,13 +427,35 @@
                 const imag = read_num();
                 return [real, imag];
             } else if (kind === 1) {
-                // Complex array: SIZE, then real[N], imag[N]
+                // Complex array: SIZE, then interleaved [re, im] pairs
                 const N = read_compressed();
-                const re = new Array(N);
-                const im = new Array(N);
-                for (let i = 0; i < N; ++i) re[i] = read_num();
-                for (let i = 0; i < N; ++i) im[i] = read_num();
-                return [re, im];
+                const array = new Array(N);
+                for (let i = 0; i < N; ++i) {
+                    const real = read_num();
+                    const imag = read_num();
+                    array[i] = [real, imag];
+                }
+                return array;
+            } else if (kind === 2) {
+                // Aligned complex array: a nested aligned typed array of 2N interleaved components
+                const inner_header = buffer[cursor++];
+                if (inner_header !== 0x5C) {
+                    throw new Error('Aligned complex array value must be an aligned typed array');
+                }
+                const inner = read_aligned_typed_array();
+                // Both headers carry the numerical type and BYTE COUNT in bits 3-7
+                if ((inner.numeric_header & 0b11111000) !== (ch & 0b11111000)) {
+                    throw new Error('Aligned complex array element type does not match its complex header');
+                }
+                if (inner.values.length % 2 !== 0) {
+                    throw new Error('Aligned complex array component count must be even');
+                }
+                const N = inner.values.length / 2;
+                const array = new Array(N);
+                for (let i = 0; i < N; ++i) {
+                    array[i] = [inner.values[2 * i], inner.values[2 * i + 1]];
+                }
+                return array;
             } else {
                 throw new Error('Unsupported complex kind');
             }

@@ -171,57 +171,7 @@ function data = read_value(fid)
             is_aligned = is_bool_or_string && (sub_type == 2);
 
             if is_aligned
-                % Aligned typed array
-                numeric_header = fread(fid, 1, '*uint8', 'l');
-                assert(bitand(numeric_header, 0b00000111) == 0b100, ...
-                    'Invalid aligned typed array numeric header');
-                a_element_type = bitshift(bitand(numeric_header, 0b00011000), -3);
-                assert(a_element_type ~= 3, ...
-                    'Aligned typed array numeric header must not encode boolean or string');
-                a_is_float = (a_element_type == 0);
-                a_is_signed = (a_element_type == 1);
-                a_byte_count_index = bitshift(bitand(numeric_header, 0b11100000), -5);
-                a_byte_count = config(a_byte_count_index + 1);
-                N = read_compressed(fid);
-                padding_length = fread(fid, 1, '*uint8', 'l');
-                if padding_length > 0
-                    [~, count] = fread(fid, padding_length, '*uint8', 'l');
-                    assert(count == padding_length, ...
-                        'Aligned typed array padding extends past end of file');
-                end
-
-                if a_is_float
-                    switch a_byte_count
-                        case 4
-                            data = fread(fid, N, '*float32', 'l');
-                        case 8
-                            data = fread(fid, N, '*float64', 'l');
-                    end
-                else
-                    if a_is_signed
-                        switch a_byte_count
-                            case 1
-                                data = fread(fid, N, '*int8', 'l');
-                            case 2
-                                data = fread(fid, N, '*int16', 'l');
-                            case 4
-                                data = fread(fid, N, '*int32', 'l');
-                            case 8
-                                data = fread(fid, N, '*int64', 'l');
-                        end
-                    else
-                        switch a_byte_count
-                            case 1
-                                data = fread(fid, N, '*uint8', 'l');
-                            case 2
-                                data = fread(fid, N, '*uint16', 'l');
-                            case 4
-                                data = fread(fid, N, '*uint32', 'l');
-                            case 8
-                                data = fread(fid, N, '*uint64', 'l');
-                        end
-                    end
-                end
+                data = read_aligned_typed_array(fid);
             else
 
             %% Only used for numeric types
@@ -327,6 +277,70 @@ function data = read_value(fid)
         otherwise
             error('Unsupported type');
     end
+end
+
+% Reads an aligned typed array whose typed array header byte has already been
+% consumed. Returns the elements alongside the numeric header, so callers that wrap
+% an aligned typed array (such as complex arrays) can validate it.
+function [data, numeric_header] = read_aligned_typed_array(fid)
+    config = uint8([1, 2, 4, 8]);
+
+    numeric_header = fread(fid, 1, '*uint8', 'l');
+    assert(bitand(numeric_header, 0b00000111) == 0b100, ...
+        'Invalid aligned typed array numeric header');
+    element_type = bitshift(bitand(numeric_header, 0b00011000), -3);
+    assert(element_type ~= 3, ...
+        'Aligned typed array numeric header must not encode boolean or string');
+    is_float = (element_type == 0);
+    is_signed = (element_type == 1);
+    byte_count_index = bitshift(bitand(numeric_header, 0b11100000), -5);
+    byte_count = config(byte_count_index + 1);
+    N = read_compressed(fid);
+    padding_length = fread(fid, 1, '*uint8', 'l');
+    if padding_length > 0
+        [~, count] = fread(fid, padding_length, '*uint8', 'l');
+        assert(count == padding_length, ...
+            'Aligned typed array padding extends past end of file');
+    end
+
+    if is_float
+        assert(byte_count == 4 || byte_count == 8, ...
+            'Unsupported aligned typed array float byte count: %d', byte_count);
+        switch byte_count
+            case 4
+                data = fread(fid, N, '*float32', 'l');
+            case 8
+                data = fread(fid, N, '*float64', 'l');
+        end
+    else
+        if is_signed
+            switch byte_count
+                case 1
+                    data = fread(fid, N, '*int8', 'l');
+                case 2
+                    data = fread(fid, N, '*int16', 'l');
+                case 4
+                    data = fread(fid, N, '*int32', 'l');
+                case 8
+                    data = fread(fid, N, '*int64', 'l');
+            end
+        else
+            switch byte_count
+                case 1
+                    data = fread(fid, N, '*uint8', 'l');
+                case 2
+                    data = fread(fid, N, '*uint16', 'l');
+                case 4
+                    data = fread(fid, N, '*uint32', 'l');
+                case 8
+                    data = fread(fid, N, '*uint64', 'l');
+            end
+        end
+    end
+
+    % fread silently returns a short vector when the payload is truncated
+    assert(numel(data) == N, ...
+        'Aligned typed array payload extends past end of file');
 end
 
 function data = read_complex(fid)
@@ -444,6 +458,21 @@ function data = read_complex(fid)
                 end
                 data = complex(raw(1, :), raw(2, :)); % remap to complex
             end
+        case 2 % aligned complex array
+            inner_header = fread(fid, 1, '*uint8', 'l');
+            assert(inner_header == 0x5C, ...
+                'Aligned complex array value must be an aligned typed array');
+            [components, inner_numeric_header] = read_aligned_typed_array(fid);
+            % Both headers carry the numerical type and BYTE COUNT in bits 3-7
+            assert(bitand(inner_numeric_header, 0b11111000) == bitand(complex_header, 0b11111000), ...
+                'Aligned complex array element type does not match its complex header');
+            assert(mod(numel(components), 2) == 0, ...
+                'Aligned complex array component count must be even');
+            % Components are interleaved [re, im] pairs
+            raw = reshape(components, 2, []);
+            data = complex(raw(1, :), raw(2, :));
+        otherwise
+            error('Unsupported complex sub-type: %d', type);
     end
 end
 

@@ -91,30 +91,7 @@ def load_beve(filename):
                         string_size = read_compressed(fid)
                         data.append(fid.read(string_size).decode("utf-8"))
                 elif sub_type == 2:  # aligned typed array
-                    numeric_header = np.fromfile(fid, dtype=np.uint8, count=1)[0]
-                    if (numeric_header & 0b00000111) != 0b100:
-                        raise ValueError("Invalid aligned typed array numeric header")
-                    a_num_type = (numeric_header & 0b00011000) >> 3
-                    if a_num_type == 3:
-                        raise ValueError("Aligned typed array numeric header must not encode boolean or string")
-                    a_byte_count_index = (numeric_header & 0b11100000) >> 5
-                    a_config = np.uint8([1, 2, 4, 8, 16, 32, 64, 128])
-                    a_byte_count = a_config[a_byte_count_index]
-                    size = read_compressed(fid)
-                    padding_length = np.fromfile(fid, dtype=np.uint8, count=1)[0]
-                    if padding_length > 0:
-                        padding_bytes = fid.read(int(padding_length))
-                        if len(padding_bytes) < padding_length:
-                            raise ValueError("Aligned typed array padding extends past end of file")
-                    a_is_float = a_num_type == 0
-                    a_is_signed = a_num_type == 1
-                    if a_is_float:
-                        data = np.fromfile(fid, dtype=np.float32 if a_byte_count == 4 else np.float64, count=size, sep="")
-                    else:
-                        if a_is_signed:
-                            data = np.fromfile(fid, dtype=np.int8 if a_byte_count == 1 else np.int16 if a_byte_count == 2 else np.int32 if a_byte_count == 4 else np.int64, count=size, sep="")
-                        else:
-                            data = np.fromfile(fid, dtype=np.uint8 if a_byte_count == 1 else np.uint16 if a_byte_count == 2 else np.uint32 if a_byte_count == 4 else np.uint64, count=size, sep="")
+                    data, _ = read_aligned_typed_array(fid)
                 elif sub_type == 0:
                     raise NotImplementedError("Boolean array support not implemented")
                 else:
@@ -162,6 +139,43 @@ def load_beve(filename):
 
         return data
 
+    def read_aligned_typed_array(fid):
+        # Reads an aligned typed array whose typed array header byte has already been
+        # consumed. Returns the elements alongside the numeric header, so callers that
+        # wrap an aligned typed array (such as complex arrays) can validate it.
+        numeric_header = np.fromfile(fid, dtype=np.uint8, count=1)[0]
+        if (numeric_header & 0b00000111) != 0b100:
+            raise ValueError("Invalid aligned typed array numeric header")
+        num_type = (numeric_header & 0b00011000) >> 3
+        if num_type == 3:
+            raise ValueError("Aligned typed array numeric header must not encode boolean or string")
+        byte_count_index = (numeric_header & 0b11100000) >> 5
+        config = np.uint8([1, 2, 4, 8, 16, 32, 64, 128])
+        byte_count = config[byte_count_index]
+        size = read_compressed(fid)
+        padding_length = np.fromfile(fid, dtype=np.uint8, count=1)[0]
+        if padding_length > 0:
+            padding_bytes = fid.read(int(padding_length))
+            if len(padding_bytes) < padding_length:
+                raise ValueError("Aligned typed array padding extends past end of file")
+        is_float = num_type == 0
+        is_signed = num_type == 1
+        if is_float:
+            if byte_count not in (4, 8):
+                raise ValueError("Unsupported aligned typed array float byte count: " + str(int(byte_count)))
+            data = np.fromfile(fid, dtype=np.float32 if byte_count == 4 else np.float64, count=size, sep="")
+        else:
+            if byte_count not in (1, 2, 4, 8):
+                raise ValueError("Unsupported aligned typed array integer byte count: " + str(int(byte_count)))
+            if is_signed:
+                data = np.fromfile(fid, dtype=np.int8 if byte_count == 1 else np.int16 if byte_count == 2 else np.int32 if byte_count == 4 else np.int64, count=size, sep="")
+            else:
+                data = np.fromfile(fid, dtype=np.uint8 if byte_count == 1 else np.uint16 if byte_count == 2 else np.uint32 if byte_count == 4 else np.uint64, count=size, sep="")
+        # np.fromfile silently returns a short array when the payload is truncated
+        if data.size != size:
+            raise ValueError("Aligned typed array payload extends past end of file")
+        return data, numeric_header
+
     def read_complex(fid):
         complex_header = np.fromfile(fid, dtype=np.uint8, count=1)[0]
         type_val = np.bitwise_and(complex_header, 0b00000111)
@@ -190,6 +204,20 @@ def load_beve(filename):
                 data = np.fromfile(fid, dtype=np.complex64 if byte_count == 4 else np.complex128, count=size, sep="")
             else:
                  raise ValueError("Unsupported complex integer type")
+        elif type_val == 2:  # aligned complex array
+            if not is_float:
+                raise ValueError("Unsupported complex integer type")
+            inner_header = np.fromfile(fid, dtype=np.uint8, count=1)[0]
+            if inner_header != 0x5C:
+                raise ValueError("Aligned complex array value must be an aligned typed array")
+            components, inner_numeric_header = read_aligned_typed_array(fid)
+            # Both headers carry the numerical type and BYTE COUNT in bits 3-7
+            if (inner_numeric_header & 0b11111000) != (complex_header & 0b11111000):
+                raise ValueError("Aligned complex array element type does not match its complex header")
+            if components.size % 2 != 0:
+                raise ValueError("Aligned complex array component count must be even")
+            # Interleaved [re, im] components are the memory layout of complex values
+            data = components.view(np.complex64 if byte_count == 4 else np.complex128)
         else:
             raise ValueError("Unsupported complex type")
 

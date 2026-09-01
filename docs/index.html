@@ -392,7 +392,7 @@ uint128_t     0b100'10'001</code></pre>
             <p>where <code>offset_after_padding_length</code> is the byte offset from the start of the message buffer.</p>
             <p>Aligned typed arrays must only encode numeric types. Boolean and string sub-types must not be used.</p>
             <div class="note">
-                <p>Extensions that embed typed arrays (matrices, complex numbers) gain zero-copy support automatically by using an aligned typed array as the inner value.</p>
+                <p>Extensions whose inner value is a typed array gain zero-copy support automatically: a matrix <code>VALUE</code> may be an aligned typed array. Complex arrays store raw data rather than an inner value, so they have a dedicated aligned sub-type instead (see 3 - Complex Numbers).</p>
             </div>
 
             <h4>5 - Generic Array</h4>
@@ -447,16 +447,30 @@ uint128_t     0b100'10'001</code></pre>
             <ul>
                 <li>Complex numbers are stored as pairs of numerical types.</li>
             </ul>
-            <p>The first three bits denote whether this is a single complex number or a complex array.</p>
+            <p>The first three bits denote the complex sub-type.</p>
             <pre><code class="language-cpp">0 -&gt; complex number
-1 -&gt; complex array</code></pre>
+1 -&gt; complex array
+2 -&gt; aligned complex array</code></pre>
+            <div class="note">
+                <p>Three bits are used to align the left bits with the layouts for numbers.</p>
+            </div>
             <p>For a single complex number the layout is: <code>HEADER | COMPLEX HEADER | DATA</code></p>
             <div class="note">
                 <p>A complex value is a pair of numbers.</p>
             </div>
             <p>For a complex array the layout is: <code>HEADER | COMPLEX HEADER | SIZE | DATA</code></p>
+            <ul>
+                <li><code>SIZE</code> is the number of complex elements.</li>
+                <li><code>DATA</code> stores the components interleaved, real part first: <code>re[0], im[0], re[1], im[1], ...</code>, for a payload of <code>SIZE * 2 * BYTE COUNT</code> bytes.</li>
+            </ul>
+            <p>For an aligned complex array the layout is: <code>HEADER | COMPLEX HEADER | VALUE</code></p>
+            <ul>
+                <li><code>VALUE</code> must be an aligned typed array holding the interleaved components.</li>
+                <li>The aligned typed array's <code>SIZE</code> is the number of components, <code>2 * N</code> for <code>N</code> complex elements, and must be even.</li>
+                <li>The aligned typed array's <code>NUMERIC_HEADER</code> must encode the same numerical type and BYTE COUNT as the COMPLEX HEADER. Decoders must reject a message where the two disagree.</li>
+            </ul>
             <div class="note">
-                <p>Three bits are used to align the left bits with the layouts for numbers.</p>
+                <p>Interleaved <code>[re, im]</code> pairs aligned to <code>alignof(T)</code> are the memory layout of a contiguous complex array, so the payload can be returned with no copy.</p>
             </div>
             <p>The next two bits denote the numerical type:</p>
             <pre><code class="language-cpp">0 -&gt; floating point      0b000'00'000
@@ -465,7 +479,7 @@ uint128_t     0b100'10'001</code></pre>
             <p>The next three bits are used to indicate the BYTE COUNT. This is the same specification for BEVE numbers.</p>
             <p>The converted JSON format should look like:</p>
             <pre><code class="language-json">[1, 2] // for a complex number
-[[1, 2], [2.0, 3]] // for a complex array</code></pre>
+[[1, 2], [2.0, 3]] // for a complex array (aligned or not)</code></pre>
         </section>
     </main>
 

@@ -383,12 +383,15 @@ function read_complex_ext(fid) {
         const imag = read_num();
         return [real, imag];
     } else if (kind === 1) {
+        // Complex array: SIZE, then interleaved [re, im] pairs
         const N = read_compressed(fid);
-        const re = new Array(N);
-        const im = new Array(N);
-        for (let i = 0; i < N; ++i) re[i] = read_num();
-        for (let i = 0; i < N; ++i) im[i] = read_num();
-        return [re, im];
+        const array = new Array(N);
+        for (let i = 0; i < N; ++i) {
+            const real = read_num();
+            const imag = read_num();
+            array[i] = [real, imag];
+        }
+        return array;
     } else {
         throw new Error('Unsupported complex kind');
     }

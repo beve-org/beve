@@ -531,6 +531,152 @@ describe('BEVE JavaScript Library', () => {
         });
     });
 
+    describe('Complex Numbers', () => {
+
+        test('single complex float64', () => {
+            const buf = new Uint8Array([
+                0x1E, 0x60,             // extension 3 (complex), single complex, float64
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F, // 1.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, // 2.0
+            ]);
+            assert.deepStrictEqual(beve.read_beve(buf), [1.0, 2.0]);
+        });
+
+        test('complex array stores interleaved [re, im] pairs', () => {
+            const buf = new Uint8Array([
+                0x1E, 0x61, 0x08,       // complex array, float64, size=2
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F, // 1.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, // 2.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40, // 3.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40, // 4.0
+            ]);
+            assert.deepStrictEqual(beve.read_beve(buf), [[1.0, 2.0], [3.0, 4.0]]);
+        });
+
+        test('complex arrays from example file', () => {
+            const filePath = path.join(__dirname, '..', 'examples', 'complex_numbers.beve');
+            if (fs.existsSync(filePath)) {
+                const buffer = fs.readFileSync(filePath);
+                const data = beve.read_beve(new Uint8Array(buffer));
+                assert.deepStrictEqual(data.complex_int32_t, [[-1, 5], [7, -9]]);
+                assertClose(data.complex_floats[0][0], 1.0);
+                assertClose(data.complex_floats[0][1], 0.5);
+                assertClose(data.complex_floats[1][0], 0.1);
+                assertClose(data.complex_floats[1][1], 2.0);
+            }
+        });
+
+        test('aligned complex float64 array', () => {
+            // From the proposal's worked example
+            const buf = new Uint8Array([
+                0x1E, 0x62,             // complex, aligned complex array, float64
+                0x5C, 0x64, 0x10, 0x02, // aligned typed array, float64, 4 components, padding=2
+                0x00, 0x00,             // padding
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F, // 1.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, // 2.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40, // 3.0
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40, // 4.0
+            ]);
+            assert.deepStrictEqual(beve.read_beve(buf), [[1.0, 2.0], [3.0, 4.0]]);
+        });
+
+        test('aligned complex array from example file', () => {
+            const filePath = path.join(__dirname, '..', 'examples', 'aligned_complex_float64_array.beve');
+            if (fs.existsSync(filePath)) {
+                const buffer = fs.readFileSync(filePath);
+                const data = beve.read_beve(new Uint8Array(buffer));
+                assert.deepStrictEqual(data, [[1.0, 2.0], [3.0, 4.0]]);
+            }
+        });
+
+        test('aligned complex array decodes to the same values as an unaligned one', () => {
+            const unaligned = new Uint8Array([
+                0x1E, 0x41, 0x08,       // complex array, float32, size=2
+                0x00, 0x00, 0x80, 0x3F, // 1.0f
+                0x00, 0x00, 0x00, 0x40, // 2.0f
+                0x00, 0x00, 0x40, 0x40, // 3.0f
+                0x00, 0x00, 0x80, 0x40, // 4.0f
+            ]);
+            const aligned = new Uint8Array([
+                0x1E, 0x42,             // complex, aligned complex array, float32
+                0x5C, 0x44, 0x10, 0x02, // aligned typed array, float32, 4 components, padding=2
+                0x00, 0x00,             // padding
+                0x00, 0x00, 0x80, 0x3F, // 1.0f
+                0x00, 0x00, 0x00, 0x40, // 2.0f
+                0x00, 0x00, 0x40, 0x40, // 3.0f
+                0x00, 0x00, 0x80, 0x40, // 4.0f
+            ]);
+            assert.deepStrictEqual(beve.read_beve(aligned), beve.read_beve(unaligned));
+        });
+
+        test('aligned complex array rejects a non-aligned inner value', () => {
+            const buf = new Uint8Array([
+                0x1E, 0x62,             // complex, aligned complex array, float64
+                0x44, 0x08,             // a plain float32 typed array, not an aligned one
+                0x00, 0x00, 0x80, 0x3F,
+                0x00, 0x00, 0x00, 0x40,
+            ]);
+            assert.throws(() => beve.read_beve(buf), /must be an aligned typed array/);
+        });
+
+        test('aligned complex array rejects an element type mismatch', () => {
+            const buf = new Uint8Array([
+                0x1E, 0x62,             // complex header says float64
+                0x5C, 0x44, 0x10, 0x02, // inner aligned array says float32
+                0x00, 0x00,
+                0x00, 0x00, 0x80, 0x3F,
+                0x00, 0x00, 0x00, 0x40,
+                0x00, 0x00, 0x40, 0x40,
+                0x00, 0x00, 0x80, 0x40,
+            ]);
+            assert.throws(() => beve.read_beve(buf), /does not match its complex header/);
+        });
+
+        test('aligned complex array rejects an unreadable byte count', () => {
+            // float with BYTE COUNT 1 is not a readable element type. Before this was
+            // rejected the payload went unconsumed and the cursor desynced.
+            const buf = new Uint8Array([
+                0x1E, 0x02,             // complex, aligned complex array, float, byte count 1
+                0x5C, 0x04, 0x10, 0x00, // aligned typed array, same element type, 4 components
+                0x01, 0x02, 0x03, 0x04,
+            ]);
+            assert.throws(() => beve.read_beve(buf), /Unsupported aligned typed array element type/);
+        });
+
+        test('aligned complex array rejects a reserved byte count index', () => {
+            const buf = new Uint8Array([
+                0x1E, 0xA2,             // complex, aligned complex array, float, byte count index 5
+                0x5C, 0xA4, 0x10, 0x00,
+                0x01, 0x02, 0x03, 0x04,
+            ]);
+            assert.throws(() => beve.read_beve(buf), /Unsupported aligned typed array element type/);
+        });
+
+        test('a rejected aligned complex array does not corrupt the rest of an object', () => {
+            // The unconsumed payload was previously reinterpreted as the next key
+            const buf = new Uint8Array([
+                0x03, 0x08,             // object, 2 keys
+                0x04, 0x61,             // key "a"
+                0x1E, 0x02, 0x5C, 0x04, 0x10, 0x00, 0x01, 0x02, 0x03, 0x04,
+                0x04, 0x62,             // key "b"
+                0x19, 0x07,             // 7
+            ]);
+            assert.throws(() => beve.read_beve(buf), /Unsupported aligned typed array element type/);
+        });
+
+        test('aligned complex array rejects an odd component count', () => {
+            const buf = new Uint8Array([
+                0x1E, 0x62,             // complex, aligned complex array, float64
+                0x5C, 0x64, 0x0C, 0x02, // 3 components, padding=2
+                0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
+            ]);
+            assert.throws(() => beve.read_beve(buf), /component count must be even/);
+        });
+    });
+
     describe('Compatibility Tests with Example Files', () => {
         const examplesDir = path.join(__dirname, '..', 'examples');
 
