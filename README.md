@@ -263,7 +263,7 @@ where `offset_after_padding_length` is the byte offset from the start of the mes
 
 Aligned typed arrays must only encode numeric types. Boolean and string sub-types must not be used.
 
-> Extensions that embed typed arrays (matrices, complex numbers) gain zero-copy support automatically by using an aligned typed array as the inner value.
+> Extensions whose inner value is a typed array gain zero-copy support automatically: a matrix `VALUE` may be an aligned typed array. Complex arrays store raw data rather than an inner value, so they have a dedicated aligned sub-type instead (see [3 - Complex Numbers](#3---complex-numbers)).
 
 ## 5 - Generic Array
 
@@ -344,12 +344,15 @@ An additional COMPLEX HEADER byte is used.
 
 - Complex numbers are stored as pairs of numerical types.
 
-The first three bits denote whether this is a single complex number or a complex array.
+The first three bits denote the complex sub-type.
 
 ```c++
 0 -> complex number
 1 -> complex array
+2 -> aligned complex array
 ```
+
+> Three bits are used to align the left bits with the layouts for numbers.
 
 For a single complex number the layout is: `HEADER | COMPLEX HEADER | DATA`
 
@@ -357,7 +360,16 @@ For a single complex number the layout is: `HEADER | COMPLEX HEADER | DATA`
 
 For a complex array the layout is: `HEADER | COMPLEX HEADER | SIZE | DATA`
 
-> Three bits are used to align the left bits with the layouts for numbers.
+- `SIZE` is the number of complex elements.
+- `DATA` stores the components interleaved, real part first: `re[0], im[0], re[1], im[1], ...`, for a payload of `SIZE * 2 * BYTE COUNT` bytes.
+
+For an aligned complex array the layout is: `HEADER | COMPLEX HEADER | VALUE`
+
+- `VALUE` must be an [aligned typed array](#aligned-typed-arrays) holding the interleaved components.
+- The aligned typed array's `SIZE` is the number of components, `2 * N` for `N` complex elements, and must be even.
+- The aligned typed array's `NUMERIC_HEADER` must encode the same numerical type and BYTE COUNT as the COMPLEX HEADER. Decoders must reject a message where the two disagree.
+
+> Interleaved `[re, im]` pairs aligned to `alignof(T)` are the memory layout of a contiguous complex array, so the payload can be returned with no copy.
 
 The next two bits denote the numerical type:
 
@@ -373,5 +385,5 @@ The converted JSON format should look like:
 
 ```json
 [1, 2] // for a complex number
-[[1, 2], [2.0, 3]] // for a complex array
+[[1, 2], [2.0, 3]] // for a complex array (aligned or not)
 ```

@@ -1,6 +1,6 @@
 # BEVE Proposal: Deprecate the Type Tag Extension (Variants as Objects)
 
-**Status:** Working Draft
+**Status:** Adopted
 **Targets:** BEVE Version 2
 
 ## Motivation
@@ -81,7 +81,7 @@ There is no special mapping. A variant encoded as an object maps to JSON as any 
 
 - **Forward direction is free.** A Version 2 variant is an ordinary BEVE value, so it is already valid Version 1 BEVE. A Version 1 decoder reads it with no error and no special handling.
 - **Reverse direction is covered by the read rule.** The only construct a Version 2 decoder may encounter that a Version 1 producer emitted is the type tag extension itself; per the deprecation rule above, decoders should continue to read it.
-- **No version signal is required for interop.** Because the Version 2 variant encoding is a strict subset of existing Version 1 value types, a producer need not advertise a version for a consumer to read its variants. Where explicit version negotiation is desired for other reasons, the [Framing Header](Framing%20Header%20Proposal.md) extension (Extension 5, version byte) provides it; a Version 2 producer may set its `VERSION` byte to `2`.
+- **No version signal is required for interop.** Because the Version 2 variant encoding is a strict subset of existing Version 1 value types, a producer need not advertise a version for a consumer to read its variants. Where explicit version negotiation is desired for other reasons, the [Framing Header](../Framing%20Header%20Proposal.md) extension (Extension 5, version byte) provides it; a Version 2 producer may set its `VERSION` byte to `2`.
 
 ## Migration
 

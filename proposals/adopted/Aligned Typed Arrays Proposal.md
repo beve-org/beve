@@ -1,6 +1,6 @@
 # BEVE Proposal: Aligned Typed Arrays for Zero-Copy Access
 
-**Status:** Working Draft
+**Status:** Adopted
 
 ## Motivation
 
@@ -13,7 +13,7 @@ On modern hardware, unaligned access is either a performance penalty or an outri
 1. **Zero-copy typed arrays** — typed array data can be reinterpreted in-place as `span<T>` where `T` is the element type.
 2. **Self-describing padding** — the padding length is stored as a single byte, so decoders can skip padding without tracking byte offsets from the message origin.
 3. **Contiguous memory requirement** — the entire BEVE message from its start up to and including any aligned typed array must reside in a single contiguous buffer.
-4. **Composability** — any extension that embeds a typed array (matrices, complex numbers, timestamps) gains zero-copy support automatically.
+4. **Composability** — any extension whose inner value is a typed array (matrices, timestamps) gains zero-copy support automatically.
 5. **Simple decoding** — decoders do not need to track absolute byte offsets; all information needed to parse an aligned typed array is local to the header.
 
 ## Buffer Alignment Requirement
@@ -24,7 +24,7 @@ If the buffer address is aligned to `A` and the data payload of a typed array be
 
 ## Aligned Typed Arrays — Built Into the Typed Array Tag
 
-Rather than consuming an extension ID, aligned typed arrays are encoded as a new sub-type within the existing typed array category 3 (boolean/string). This approach means that any BEVE extension that embeds a typed array — matrices, complex numbers, timestamps — gains zero-copy alignment support automatically, with no changes to those extensions.
+Rather than consuming an extension ID, aligned typed arrays are encoded as a new sub-type within the existing typed array category 3 (boolean/string). This approach means that any BEVE extension whose inner value is a typed array — matrices, timestamps — gains zero-copy alignment support automatically, with no changes to those extensions.
 
 ### Background: Typed Array Category 3
 
@@ -167,13 +167,7 @@ No changes to the matrix extension are required.
 
 ### Complex Numbers (Extension 3)
 
-Complex arrays store pairs of numerical values in a typed array. Using an aligned typed array as the inner data automatically aligns the complex data:
-
-```
-EXT(3) | COMPLEX_HEADER | SIZE | ALIGNED_TYPED_ARRAY_DATA
-```
-
-No changes to the complex number extension are required.
+> **Correction.** A complex array is `EXT(3) | COMPLEX_HEADER | SIZE | DATA` — raw data with no inner value slot — so an aligned typed array cannot be placed inside it as claimed here. Aligning complex payloads required a new complex sub-type; see the [Aligned Complex Arrays proposal](Aligned%20Complex%20Arrays%20Proposal.md).
 
 ## Nested / Multiple Aligned Arrays
 
@@ -200,6 +194,6 @@ As a guideline: the copy cost of re-aligning `N` bytes is roughly proportional t
 
 This proposal adds zero-copy typed array support to BEVE through a new sub-type within the existing typed array tag:
 
-**Aligned Typed Array** (typed array category 3, sub-type 2): uses a second header byte to encode the numeric element type, followed by the element count, a padding length byte, padding, and the data payload. Because alignment lives within the typed array tag itself, every extension that embeds a typed array — matrices, complex numbers, timestamps — gains zero-copy support automatically with no modifications.
+**Aligned Typed Array** (typed array category 3, sub-type 2): uses a second header byte to encode the numeric element type, followed by the element count, a padding length byte, padding, and the data payload. Because alignment lives within the typed array tag itself, every extension whose inner value is a typed array — matrices, timestamps — gains zero-copy support automatically with no modifications.
 
 The explicit padding length byte means decoders do not need to track absolute byte offsets from the message origin — all information needed to parse the array is local to its header. This simplifies decoder implementation while maintaining zero-copy access for large numerical arrays.
