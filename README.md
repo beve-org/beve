@@ -83,6 +83,8 @@ A compressed unsigned integer uses the first two bits to denote the number of by
 ...
 ```
 
+Floating point is the one exception: its indicator `0` is bfloat16, which is 2 bytes. See [1 - Number](#1---number).
+
 ## Header
 
 Every `VALUE` begins with a byte header. Any unspecified bits must be set to zero.
@@ -137,7 +139,7 @@ Float point types must conform to the IEEE-754 standard.
 
 The next three bits of the HEADER are used as the BYTE COUNT.
 
-> Note: brain floats use a byte count indicator of 1, even though they use 2 bytes per value. This is used because float8_t is not supported and not typically useful.
+> Note: bfloat16 (brain float) uses the BYTE COUNT indicator `0`, the slot a one-byte float would take, although each value is 2 bytes. There is no one-byte floating point type (float8_t is not supported and not typically useful), so for floating point the indicator `0` always means bfloat16, 2 bytes per value.
 
 > See [Fixed width integer types](https://en.cppreference.com/w/cpp/types/integer) for integer specification.
 

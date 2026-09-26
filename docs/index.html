@@ -260,6 +260,7 @@
 6      64
 7      128
 ...</code></pre>
+            <p>Floating point is the one exception: its indicator <code>0</code> is bfloat16, which is 2 bytes.</p>
 
             <h3>Header</h3>
             <p>Every <code>VALUE</code> begins with a byte header. Any unspecified bits must be set to zero.</p>
@@ -302,7 +303,7 @@ true       0b000'11'000</code></pre>
 
             <p>The next three bits of the HEADER are used as the BYTE COUNT.</p>
             <div class="note">
-                <p><strong>Note:</strong> brain floats use a byte count indicator of 1, even though they use 2 bytes per value. This is used because float8_t is not supported and not typically useful.</p>
+                <p><strong>Note:</strong> bfloat16 (brain float) uses the BYTE COUNT indicator <code>0</code>, the slot a one-byte float would take, although each value is 2 bytes. There is no one-byte floating point type (float8_t is not supported and not typically useful), so for floating point the indicator <code>0</code> always means bfloat16, 2 bytes per value.</p>
             </div>
 
             <h5>Floating Point Types</h5>
