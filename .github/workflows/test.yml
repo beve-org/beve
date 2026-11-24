@@ -25,3 +25,33 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  python:
+    name: Python Tests (${{ matrix.python }}, numpy ${{ matrix.numpy }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - python: '3.9'
+            numpy: '1.22.*'
+          - python: '3.13'
+            numpy: '2.*'
+
+    defaults:
+      run:
+        working-directory: python
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install
+        run: pip install -e '.[test]' "numpy==${{ matrix.numpy }}"
+
+      - name: Run tests
+        run: pytest

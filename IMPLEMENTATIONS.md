@@ -11,7 +11,7 @@
 
 ## Python
 
-- [load_beve.py](https://github.com/stephenberry/eve/blob/main/python/load_beve.py) (this repository)
+- [beve](https://github.com/beve-org/beve/tree/main/python) (this repository): a decoder that returns numeric arrays as numpy arrays
 
 ## Rust
 
