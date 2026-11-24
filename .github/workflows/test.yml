@@ -25,3 +25,29 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  python:
+    name: Python Tests (${{ matrix.python }}, numpy ${{ matrix.numpy }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: '3.11'
+            numpy: '1.24.*'
+          - python: '3.14'
+            numpy: '2.*'
+
+    defaults:
+      run:
+        working-directory: python
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Run tests
+        run: uv run --isolated --no-project --python ${{ matrix.python }} --with "numpy==${{ matrix.numpy }}" --with pytest --with-editable . pytest
