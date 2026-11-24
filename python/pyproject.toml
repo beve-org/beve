@@ -4,8 +4,8 @@ version = "0.1.0"
 description = "BEVE (Binary Efficient Versatile Encoding) decoder with numpy arrays"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9"
-dependencies = ["numpy>=1.22"]
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
 test = ["pytest>=7"]

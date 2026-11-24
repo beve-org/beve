@@ -31,11 +31,12 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - python: '3.9'
-            numpy: '1.22.*'
-          - python: '3.13'
+          - python: '3.11'
+            numpy: '1.24.*'
+          - python: '3.14'
             numpy: '2.*'
 
     defaults:
@@ -45,13 +46,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install
-        run: pip install -e '.[test]' "numpy==${{ matrix.numpy }}"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
 
       - name: Run tests
-        run: pytest
+        run: uv run --isolated --no-project --python ${{ matrix.python }} --with "numpy==${{ matrix.numpy }}" --with pytest --with-editable . pytest
